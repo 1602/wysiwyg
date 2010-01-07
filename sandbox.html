@@ -14,10 +14,6 @@ $(function () {
 </script>
 
 <style>
-label, input, p {
-	float: left;
-	clear: both;
-}
 
 input {
 	width: 400px;
@@ -29,7 +25,22 @@ input {
 
 </head>
 <body>
-<textarea id="text" cols="60" rows="10"><b>asd</b>&lt;p&gt;test&lt;p&gt;<i>zxc</i></textarea>
+<form>
+	<dl>
+		<dt>
+			<label>Input</label>
+		</dt>
+		<dd>
+			<input />
+		</dd>
+		<dt>
+			<label>Rich editor</label>
+		</dt>
+		<dd>
+			<textarea id="text" cols="60" rows="10"><b>asd</b>&lt;p&gt;test&lt;p&gt;<i>zxc</i></textarea>
+		</dd>
+	</dl>
+</form>
 </body>
 
 </html>
