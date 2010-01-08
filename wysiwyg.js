@@ -11,28 +11,59 @@
 		this.textarea = textarea;
 	}
 
+	var util = {
+		set_style: function (element, style) {
+			for (var i in style) {
+				if (style.hasOwnProperty(i)) {
+					element.style[i] = style[i];
+				}
+			}
+		},
+		add_event: function (element, event, callback) {
+			if (this.is_array(element)) {
+				for (var i = 0, len = element.length; i < len; i++ ) {
+					this.add_event(element[i], event, callback);
+				}
+				return;
+			}
+			if (element.attachEvent) {
+				element.attachEvent(event, callback);
+			} else {
+				element.addEventListener(event, callback, false);
+			}
+		},
+		is_array: function (obj) {
+			return obj && obj.constructor === Array;
+		}
+	};
+
 	Wysiwyg.prototype = {
 		create_rich_editor: function () {
 			var div = document.createElement('div');
-			div.style.borderColor = '#000000';
-			div.style.borderWidth = '1px';
-			div.style.borderStyle = 'solid';
-			div.style.width = this.textarea.offsetWidth + 'px';
-			div.style.height = this.textarea.offsetHeight + 'px';
+			var width = this.textarea.offsetWidth + 'px';
+			util.set_style(div, {
+				border: '1px solid #000',
+				width: width,
+				height: this.textarea.offsetHeight + 'px'
+			});
 			this.textarea.parentNode.insertBefore(div, this.textarea.nextSibling);
 
 			var control_panel = document.createElement('div');
-			control_panel.style.width = this.textarea.offsetWidth + 'px';
-			control_panel.style.height = '22px';
-			control_panel.style.background = 'ThreeDFace';
+			util.set_style(control_panel, {
+				width: width,
+				height: '22px',
+				background: 'ThreeDFace'
+			});
 			div.appendChild(control_panel);
 
 			var iframe = document.createElement('iframe');
 			iframe.setAttribute('frameborder', 0);
 			iframe.src = '#';
-			iframe.style.display = 'none';
-			iframe.style.width = this.textarea.offsetWidth + 'px';
-			iframe.style.height = this.textarea.offsetHeight - 32 + 'px';
+			util.set_style(iframe, {
+				display: 'none',
+				width: width,
+				height: this.textarea.offsetHeight - 32 + 'px'
+			});
 			div.appendChild(iframe);
 
 			var style = document.createElement('link');
@@ -41,22 +72,49 @@
 			style.href = 'common.css';
 			iframe.contentWindow.document.getElementsByTagName('head')[0].appendChild(style);
 
-
 			var resizer = document.createElement('div');
-			resizer.style.width = this.textarea.offsetWidth + 'px';
-			resizer.style.height = '6px';
-			resizer.style.backgroundColor = '#eeeeee';
-			resizer.style.cursor = 's-resize';
+			util.set_style(resizer, {
+				width: width,
+				height: '6px',
+				backgroundColor: '#eee',
+				cursor: 's-resize'
+			});
+			resizer.onmousedown = function (event) {
+				event = event || window.event;
+				resizer.start_position_y = event.screenY;
+				resizer.start_editor_offset_height = div.offsetHeight;
+				resizer.start_iframe_offset_height = iframe.offsetHeight;
+				document.onmousemove = function (event) {
+					event = event || window.event;
+					resizer.current_position_y = event.screenY;
+					var delta = resizer.current_position_y - resizer.start_position_y;
+					if (delta < iframe.offsetHeight) {
+						div.style.height = resizer.start_editor_offset_height + delta + 'px';
+						iframe.style.height = resizer.start_iframe_offset_height + delta + 'px';
+					}
+				};
+				//iframe.contentWindow.document.onmousemove = document.onmousemove;
+				var prev_onmouseup = document.onmouseup;
+				document.onmouseup = function () {
+					document.onmousemove = null;
+					document.onmouseup = prev_onmouseup;
+				};
+				return false;
+			};
 			div.appendChild(resizer);
 
 			this.iframe = iframe;
 			this.editor_block = div;
 			this.control_panel = control_panel;
 			this.resizer = resizer;
+
 			this.init_controls();
 		},
 		init_controls: function () {
 			var editor = this.iframe.contentWindow.document;
+			util.add_event([editor, document], 'mouseup', function () {
+				editor.handle_mouse_over_button = false;
+			});
 			var commands = [
 				{
 					image: 'text_bold',
@@ -109,6 +167,9 @@
 				button.onmouseover = (function (b) {
 					return function () {
 						//b.style.backgroundColor = 'ThreeDHighlight';
+						if (editor.handle_mouse_over_button) {
+							b.style.backgroundPosition = '1px 1px';
+						}
 					};
 				})(button);
 				button.onmouseout = (function (b) {
@@ -120,6 +181,7 @@
 				button.onmousedown = (function (b) {
 					return function () {
 						//b.style.backgroundColor = '#eee';
+						editor.handle_mouse_over_button = true;
 						b.style.backgroundPosition = '1px 1px';
 						return false;
 					};
@@ -128,7 +190,7 @@
 					return function () {
 						editor.execCommand(cmd.action, null, '');
 						//b.style.backgroundColor = 'ThreeDFace';
-						b.style.backgroundPosition = '0 0';
+						//b.style.backgroundPosition = '0 0';
 						return false;
 					};
 				})(cmd, button);
