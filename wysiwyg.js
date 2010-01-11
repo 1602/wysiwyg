@@ -248,6 +248,7 @@
 					} else {
 						util.remove_class(b.el, 'active');
 					}
+					util.remove_class(b.el, 'disabled');
 					break;
 				case 'spoiler':
 					if (util.in_array('spoiler', parent_classes) !== -1) {
@@ -255,11 +256,12 @@
 					} else {
 						util.remove_class(b.el, 'active');
 					}
+					util.remove_class(b.el, 'disabled');
 					break;
 				case 'setcolor':
-					break;
 				case 'show_source':
-					util.remove_class(b.el, 'active');
+				case 'quote':
+					util.remove_class(b.el, 'disabled');
 					break;
 				default:
 					try {
@@ -492,8 +494,9 @@
 				}
 			});
 
+			var ul = util.create_top('ul');
 			for (var i = 0, len = commands.length; i < len; i++) {
-				var button = document.createElement('button');
+				var button = document.createElement('li');
 				var cmd = commands[i];
 
 				util.set_style(button, {
@@ -518,12 +521,13 @@
 						return false;
 					};
 				})(cmd, button, editor);
-				w.controls.appendChild(button);
+				ul.appendChild(button);
 				w.buttons.push({
 					name: cmd.command || cmd.action,
 					el: button
 				});
 			}
+			w.controls.appendChild(ul);
 		},
 		show_colorpicker: function (callback) {
 			var div = document.createElement('div');
