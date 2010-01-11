@@ -6,7 +6,7 @@
 (function ($) {
 
 	var undef;
-
+	
 	var util = {
 		set_style: function (element, style) {
 			for (var i in style) {
@@ -30,6 +30,18 @@
 		},
 		is_array: function (obj) {
 			return obj && obj.constructor === Array;
+		},
+		in_array: function (el, arr) {
+			if (arr.indexOf) {
+				return arr.indexOf(el);
+			} else {
+				for (var i = 0, len = arr.len; i < len; i++) {
+					if (arr[i] === el) {
+						return i;
+					}
+				}
+				return -1;
+			}
 		},
 		calc_drag_bounds: function (el) {
 			// Calc visible screen bounds (this code is common)
@@ -202,6 +214,7 @@
 
 	Wysiwyg.prototype = {
 		update_controls: function () {
+			
 			var node = this.selection.getStart();
 			var cur = node;
 			var parents = [];
@@ -227,6 +240,7 @@
 					util.remove_class(b.el, 'active');
 					continue;
 				}
+				
 				switch (b.name) {
 				case 'insertimage':
 					if (node && node.nodeName === 'IMG') {
@@ -236,7 +250,7 @@
 					}
 					break;
 				case 'spoiler':
-					if (parent_classes.indexOf('spoiler') !== -1) {
+					if (util.in_array('spoiler', parent_classes) !== -1) {
 						util.add_class(b.el, 'active');
 					} else {
 						util.remove_class(b.el, 'active');
@@ -266,6 +280,7 @@
 					} catch (e) {
 					}
 				}
+				
 			}
 		},
 		set_status: function (text) {
@@ -371,12 +386,8 @@
 				command: 'quote',
 				action: function () {
 					//w.selection.insertNode(w.doc.createElement('blockquote'));
-					try {
 					nodes = w.selection.selected({wrap : 'all', tag : 'blockquote'});
 					nodes.length && w.selection.select(nodes[0], nodes[nodes.length-1]);
-					} catch (e) {
-						console.log(e);
-					}
 					w.win.focus();
 				}
 			});
@@ -698,14 +709,6 @@
 		overlay.style.visibility = 'visible';
 	}
 
-	/**
-	 * @class selection  - elRTE utils for working with text selection
-	 *
-	 * @param  elRTE  rte  объект-редактор
-	 *
-	 * @author:    Dmitry Levashov (dio) dio@std42.ru
-	 **/
-
 	Wysiwyg.prototype.selection = function(rte) {
 		this.rte      = rte;
 		var self      = this;
@@ -788,7 +791,7 @@
 		 * @return  range|w3cRange
 		 **/
 		this.getRangeAt = function(updateW3cRange) {
-			if (this.is_msie) {
+			if (this.rte.is_msie) {
 				if (!this.w3cRange) {
 					this.w3cRange = new this.rte.w3cRange(this.rte);
 				}
@@ -1333,14 +1336,6 @@
 
 	};
 
-	/**
-	 * @class w3cRange  - w3c text range emulation for "strange" browsers
-	 *
-	 * @param  elRTE  rte  объект-редактор
-	 *
-	 * @author:    Dmitry Levashov (dio) dio@std42.ru
-	 * Copyright: Studio 42, http://www.std42.ru
-	 **/
 	Wysiwyg.prototype.w3cRange = function(rte) {
 		var self                     = this;
 		this.rte                     = rte;
@@ -1588,7 +1583,6 @@
 		 * @return void
 		 **/
 		this.select = function() {
-			// thanks tinymice authors
 			function getPos(n, o) {
 				if (n.nodeType != 3) {
 					return -1;
