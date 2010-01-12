@@ -50,3 +50,28 @@ ul {
 	margin-left:0;
 	padding-left:0;
 }
+
+.bb-code {
+	background: #000;
+	color: #ddd;
+}
+
+.wysiwyg-mode .bb-media {
+	background: #ddd;
+	border: 1px dotted #777;
+	width: 200px;
+	height: 170px;
+	float: left;
+	margin: 10px;
+}
+
+.wysiwyg-mode .bb-hide {
+	border: 1px dotted #77f;
+	padding: 10px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.wysiwyg-mode .bb-hide:before {
+	content: 'Скрытый контент: '
+}

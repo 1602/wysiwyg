@@ -327,17 +327,3 @@ select.styled {
 	border:1px solid #e9e8e8;
 	padding:4px 5px;
 }
-.colorpicker {
-	list-style: none;
-	float: left;
-}
-.colorpicker li {
-	float: left;
-	width: 10px;
-	height: 10px;
-	margin: 1px;
-}
-
-.wysiwyg_editor {
-	border: 1px solid #ddd;
-}

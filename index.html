@@ -11,7 +11,18 @@
 </head>
 <body onload="wysiwyg = new Wysiwyg(document.getElementById('text'));">
 <form action="">
-	<textarea id="text" cols="80" rows="30">
+<textarea id="text" cols="80" rows="30">
+	<pre class="bb-code">
+	var spoiler = w.doc.createElement('div');
+	spoiler.setAttribute('class', 'spoiler');
+	var hidden_text = w.doc.createElement('div');
+	hidden_text.setAttribute('class', 'hidden_text');
+	hidden_text.innerHTML = '&amp;lt;br/&amp;gt;';
+	spoiler.appendChild(toggler);
+	spoiler.appendChild(hidden_text);
+	w.selection.insertNode(spoiler);
+	</pre>
+	
 <p>
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec non nisl non mauris sollicitudin iaculis. <b>Aliquam</b> erat volutpat. Vestibulum sed orci mauris. Sed ultrices, augue sed laoreet vehicula, massa neque laoreet turpis, sit amet porttitor arcu massa vitae sem. Praesent blandit augue quis lacus semper eget tincidunt dolor ornare. Nunc eu enim arcu, et pharetra nisl. Integer nec tristi</p><blockquote>que ipsum. Sed blandit, diam et cursus imperdiet, arcu mauris laoreet velit, ac molestie veli<blockquote>t purus vitae diam. Sed placerat fermentum</blockquote> diam, vel lobortis augue hendrerit eget. In iaculis s</blockquote><img style="margin: 10px;" alt="" src="http://www.gravatar.com/avatar/2af94b5cab32c8e17905f69fffdf48b9" align="left" border="1">odales nisi, pharetra facilisis tortor pellentesque sed. Donec fringilla orci quis est tempus laoreet quis ac erat. Maecenas imperdiet erat neque. Donec lectus est, luctus eu accumsan vitae, dignissim eget tellus. Pellentesque adipiscing purus id nisi ornare vel feugiat velit malesuada. Maecenas blandit, eros cursus auctor fermentum, enim odio faucibus odio, vitae ornare arcu erat non nibh.
 </p>
@@ -27,25 +38,8 @@ Quisque lectus augue, egestas eget consequat faucibus, pharetra eu leo. Quisque 
 <p>
 Suspendisse a justo commodo magna semper tempor eu a erat. Nam eleifend dolor quis lacus sagittis venenatis. Nam nec tempor quam. Mauris id ligula ipsum, eu fermentum orci. Pellentesque pulvinar orci non nunc vestibulum pulvinar. Nam ut sollicitudin felis. Duis euismod posuere porttitor. Fusce vitae sodales felis. Nunc tincidunt placerat iaculis. Donec aliquet fermentum eros ut pretium. Donec sit amet sapien sed mi aliquet tempus vel sit amet libero. Proin ac tristique orci.
 </p></textarea>
-		</dd>
-	</dl>
 </form>
-
-<p>
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec non nisl non mauris sollicitudin iaculis. Aliquam erat volutpat. Vestibulum sed orci mauris. Sed ultrices, augue sed laoreet vehicula, massa neque laoreet turpis, sit amet porttitor arcu massa vitae sem. Praesent blandit augue quis lacus semper eget tincidunt dolor ornare. Nunc eu enim arcu, et pharetra nisl. Integer nec tristique ipsum. Sed blandit, diam et cursus imperdiet, arcu mauris laoreet velit, ac molestie velit purus vitae diam. Sed placerat fermentum diam, vel lobortis augue hendrerit eget. In iaculis sodales nisi, pharetra facilisis tortor pellentesque sed. Donec fringilla orci quis est tempus laoreet quis ac erat. Maecenas imperdiet erat neque. Donec lectus est, luctus eu accumsan vitae, dignissim eget tellus. Pellentesque adipiscing purus id nisi ornare vel feugiat velit malesuada. Maecenas blandit, eros cursus auctor fermentum, enim odio faucibus odio, vitae ornare arcu erat non nibh.
-</p>
-<p>
-Fusce et mauris felis, sit amet fringilla nisi. Cras purus felis, semper sed hendrerit vel, ullamcorper laoreet dolor. Maecenas mollis, ipsum ut interdum placerat, felis leo euismod leo, ut facilisis dui magna sed urna. Nulla hendrerit iaculis odio, a blandit lorem iaculis nec. Maecenas sollicitudin vestibulum ipsum. Mauris pulvinar erat id ipsum viverra porttitor. Mauris massa mi, ornare in semper ac, lobortis nec mauris. Suspendisse felis justo, accumsan id laoreet vitae, hendrerit in quam. Aliquam erat volutpat. Duis aliquam mi felis. Etiam adipiscing mollis scelerisque. Aenean in pellentesque ligula. Ut mollis pulvinar adipiscing. Suspendisse ultricies, orci id semper consequat, mi neque pulvinar ante, eu sodales orci urna ut nisi. In hac habitasse platea dictumst. Fusce non nunc quis magna porta sodales. Aliquam dignissim massa vel urna iaculis lobortis. Donec posuere cursus orci aliquam placerat. Duis quis nisi sem, ut bibendum eros. Donec vehicula mauris ac felis consequat vulputate.
-</p>
-<p>
-Nunc luctus mattis libero eget sodales. Vestibulum ipsum orci, gravida eget rhoncus at, cursus eleifend dolor. Aliquam commodo sapien in quam pulvinar feugiat. In faucibus orci ut dolor porta pharetra. Fusce vitae nulla urna. Duis aliquet, nulla a mollis dignissim, purus felis lobortis justo, quis auctor diam metus nec quam. Phasellus fringilla velit vel nisi suscipit interdum scelerisque erat lobortis. Curabitur non nisl et neque scelerisque egestas sed vel urna. Cras quis tortor nisl. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Vivamus hendrerit semper quam sodales ultrices. Phasellus eu nisi ac enim vehicula euismod. In ac est nunc. Sed justo odio, consequat fermentum ultrices ac, euismod ut lacus. Sed eget velit quis nibh tincidunt imperdiet vel vel eros.
-</p>
-<p>
-Quisque lectus augue, egestas eget consequat faucibus, pharetra eu leo. Quisque libero augue, volutpat gravida lobortis non, accumsan sit amet metus. Phasellus consectetur ante in dolor lobortis gravida. Aliquam sagittis nibh mollis ipsum elementum id tristique enim vehicula. Curabitur placerat faucibus est, non placerat eros vestibulum non. Donec ultricies dolor ut tortor pulvinar sollicitudin nec sit amet tortor. Vivamus faucibus est justo, in fermentum turpis. Praesent dignissim commodo tempor. Proin blandit odio ligula, quis posuere augue. Proin rutrum mollis convallis. Integer nec ante diam, ut feugiat orci. Aenean eget felis est. Curabitur tellus dui, suscipit quis gravida eu, luctus et turpis. Sed ut velit vitae magna imperdiet adipiscing.
-</p>
-<p>
-Suspendisse a justo commodo magna semper tempor eu a erat. Nam eleifend dolor quis lacus sagittis venenatis. Nam nec tempor quam. Mauris id ligula ipsum, eu fermentum orci. Pellentesque pulvinar orci non nunc vestibulum pulvinar. Nam ut sollicitudin felis. Duis euismod posuere porttitor. Fusce vitae sodales felis. Nunc tincidunt placerat iaculis. Donec aliquet fermentum eros ut pretium. Donec sit amet sapien sed mi aliquet tempus vel sit amet libero. Proin ac tristique orci.
-</p>
+<div id="preview"></div>
 
 </body>
 
