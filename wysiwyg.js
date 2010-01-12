@@ -614,7 +614,7 @@
 		switch_design_mode: function () {
 			var iframe = this.iframe;
 
-			if (this.mode && this.mode === 'design') {
+			if (!this.mode || this.mode === 'design') {
 				iframe.style.display = 'none';
 				this.source.style.display = '';
 				this.source.value = iframe.contentWindow.document.body.innerHTML;
