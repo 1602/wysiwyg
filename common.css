@@ -1,19 +1,16 @@
 /* :folding=explicit: */
 
-body {
-	color: black;
-	background: #fff;
-	font-family: Verdana,Tahoma,Helvetica,Arial,sans-serif;
-	font-size:11px;
-	font-size-adjust:none;
-	font-style:normal;
-	font-variant:normal;
-	font-weight:normal;
-	line-height:normal;
-	height:100%;
+* {
+	padding:0;
 	margin:0;
-	padding-left: 10px;
-	padding-right: 10px;
+}
+body {
+	background:#fff;
+	color:#000;
+	font:13px Trebuchet MS, Arial, Tahoma, Verdana;
+}
+.clear {
+	clear:both;
 }
 
 #overlay {
@@ -47,4 +44,9 @@ blockquote {
 	border-left: 5px solid #ddd;
 	padding-left: 10px;
 	margin-left: 0;
+}
+
+ul {
+	margin-left:0;
+	padding-left:0;
 }
