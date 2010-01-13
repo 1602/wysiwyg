@@ -229,6 +229,129 @@
 		}
 	};
 	
+	var ie_selection = function (win) {
+		var self = this;
+		this.win = win;
+		this.doc = win.document;
+		
+		this.create_range = function() {
+			this.r = this.win.document.selection.createRange();
+		};
+		
+		this.get_start = function () {
+			this.create_range();
+			if (this.r.item) {
+				return this.r.item(0);
+			}
+			var r = this.r.duplicate();
+			r.collapse(true);
+			return r.parentElement();
+			//return s && s.nodeName == 'BODY' ? s.firstChild : s;
+		};
+		
+		this.insert_node = function (node) {
+			this.create_range();
+			this.r.collapse(false);
+			var r = this.r.duplicate();
+			var html;
+			if (node.nodeType == 3) {
+				html = n.nodeValue;
+			} else {
+				var fakeNode = this.doc.createElement('span');
+				fakeNode.appendChild(node);
+				html = fakeNode.innerHTML;
+			}
+			r.pasteHTML(html);
+		};
+		
+		this.collapsed = function () {
+			this.create_range();
+			if (this.r.item) {
+				return false;
+			}
+			return this.r.boundingWidth === 0;
+		};
+		
+		this.wrap_with = function (tag_name) {
+			this.create_range();
+			this.r.pasteHTML('<' + tag_name + '>' + this.r.htmlText + '</' + tag_name + '>');
+			this.r.select();
+			return this.r.parentElement();
+		};
+		
+		this.select = function() {
+			function getPos(n, o) {
+				if (n.nodeType != 3) {
+					return -1;
+				}
+				var c   ='\uFEFF';
+				var val = n.nodeValue;
+				var r   = self.rte.doc.body.createTextRange();
+				n.nodeValue = val.substring(0, o) + c + val.substring(o);
+				r.moveToElementText(n.parentNode);
+				r.findText(c);
+				var p = Math.abs(r.moveStart('character', -0xFFFFF));
+				n.nodeValue = val;
+				return p;
+			};
+			
+			this.r = this.rte.doc.body.createTextRange(); 
+			var so = this.startOffset;
+			var eo = this.endOffset;
+			var s = this.startContainer.nodeType == 1 
+				? this.startContainer.childNodes[Math.min(so, this.startContainer.childNodes.length - 1)]
+				: this.startContainer;
+			var e = this.endContainer.nodeType == 1 
+				? this.endContainer.childNodes[Math.min(so == eo ? eo : eo - 1, this.endContainer.childNodes.length - 1)]
+				: this.endContainer;
+	
+			if (this.collapsed) {
+				if (s.nodeType == 3) {
+					var p = getPos(s, so);
+					this.r.move('character', p);
+				} else {
+					this.r.moveToElementText(s);
+					this.r.collapse(true);
+				}
+			} else {
+				var r  = this.rte.doc.body.createTextRange(); 
+				var sp = getPos(s, so);
+				var ep = getPos(e, eo);
+				if (s.nodeType == 3) {
+					this.r.move('character', sp);
+				} else {
+					this.r.moveToElementText(s);
+				}
+				if (e.nodeType == 3) {
+					r.move('character', ep);
+				} else {
+					r.moveToElementText(e);
+				}
+				this.r.setEndPoint('EndToEnd', r);
+			}
+			
+			try {
+				this.r.select();
+			} catch(e) {
+				
+			}
+			if (r) {
+				r = null;
+			}
+		};
+		
+	};
+	
+	var normal_selection = function (win) {
+		
+		this.win = win;
+		this.doc = win.document;
+		
+		this.get_start = function () {
+			return this.doc.createRange().startContainer;
+		};
+	};
+	
 	window.Wysiwyg = function(textarea) {
 		var self = this;
 		this.workspace = util.create_top('div', 'secure_wysiwyg_editor');
@@ -311,9 +434,11 @@
 			catch(e) { }
 			this.doc.execCommand('styleWithCSS', false, false);
 		}
-		this.win.focus();
 
-		this.selection = new this.selection(this);
+		var cbs = this.is_msie ? ie_selection : normal_selection;
+		this.selection = new cbs(this.win);
+		
+		this.win.focus();
 		
 		$(this.doc)
 		.keydown(function(e) {
@@ -343,7 +468,7 @@
 
 	Wysiwyg.prototype = {
 		update_controls: function () {
-			var node = this.selection.getStart();
+			var node = this.selection.get_start();
 			var cur = node;
 			var parents = [];
 			var parent_classes = [];
@@ -608,23 +733,25 @@
 				image: 'bb-quote',
 				command: 'quote',
 				action: function () {
-					var quote = util.get_parent_by_tag_name(w.selection.getStart(), 'blockquote');
+					var quote = util.get_parent_by_tag_name(w.selection.get_start(), 'blockquote');
 					if (quote) {
 						util.remove_node_with_its_contents(quote);
-						w.selection.cleanCache();
+						//w.selection.cleanCache();
 					} else {
 						if (w.selection.collapsed()) {
 							var quote = w.doc.createElement('blockquote');
 							quote.innerHTML = '<br />';
-							w.selection.insertNode(quote);
-							w.selection.select(quote.firstChild, quote.firstChild);
+							w.selection.insert_node(quote);
+							//w.selection.select(quote.firstChild, quote.firstChild);
 						} else {
-							//
-							nodes = w.selection.selected({wrap : 'all', tag : 'blockquote'});
-							nodes.length && w.selection.select(nodes[0], nodes[nodes.length-1]);
+							//alert(w.selection.r.htmlText);
+							w.selection.wrap_with('blockquote');
+							//nodes = w.selection.selected({wrap : 'all', tag : 'blockquote'});
+							//nodes.length && w.selection.select(nodes[0], nodes[nodes.length-1]);
 						}
 					}
 					w.win.focus();
+					
 				},
 				panel: 'btns_small'
 			});
