@@ -327,3 +327,22 @@ select.styled {
 	border:1px solid #e9e8e8;
 	padding:4px 5px;
 }
+li.disabled {
+	opacity: 0.5;
+}
+ul.colorpicker {
+	list-style: none;
+	float: left;
+	margin: 0;
+	padding: 0;
+	width:139px;
+	height:139px;
+}
+ul.colorpicker li{
+	list-style: none;
+	width: 17px;
+	height: 17px;
+	border: 1px solid #000;
+	margin: 1px;
+	float: left;
+}

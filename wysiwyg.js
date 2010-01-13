@@ -853,17 +853,16 @@
 		},
 		show_colorpicker: function (callback) {
 			var div = document.createElement('div');
-			var html = '<ul class="colorpicker"><li style="clear: both;" />';
-			var colors = '0123456789ABCDEF'.split('');
-			for (var r = 0; r < 16; r += 2) {
-				for (var g = 0; g < 16; g += 2) {
-					for (var b = 0; b < 16; b += 2) {
+			var html = '<ul class="colorpicker">';
+			var colors = '0369CF'.split('');
+			for (var r = 0; r < 6; r += 1) {
+				for (var g = 0; g < 6; g += 1) {
+					for (var b = 0; b < 6; b += 1) {
 						var c = colors[r] + colors[g] + colors[b];
 						html += '<li style="background:#' + c + '">&nbsp;</li>';
 					}
-					html += '<li style="clear: both;" />';
 				}
-				html += '</ul><ul class="colorpicker"><li style="clear: both;" />';
+				html += '</ul><ul class="colorpicker">';
 			}
 			html += '</ul>';
 			div.innerHTML = html;
