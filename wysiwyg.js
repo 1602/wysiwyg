@@ -101,7 +101,7 @@
 			if (arr.indexOf) {
 				return arr.indexOf(el);
 			} else {
-				for (var i = 0, len = arr.len; i < len; i++) {
+				for (var i = 0, len = arr.length; i < len; i++) {
 					if (arr[i] === el) {
 						return i;
 					}
@@ -171,7 +171,7 @@
 			var classes = el.getAttribute('class');
 			if (!classes) return;
 			classes = classes.toLowerCase().replace(class_name, '').replace(/\s+/, ' ');
-			el.setAttribute($.browser.msie? 'className' : 'class', classes);
+			el.className = classes;
 		},
 		has_class: function(el, class_name) {
 			if (!el || !el.getAttribute) return false;
@@ -198,7 +198,7 @@
 				classes = [];
 			}
 			classes.push(class_name);
-			el.setAttribute($.browser.msie? 'className' : 'class', classes.join(' '));
+			el.className = classes.join(' ');
 		},
 		remove_node_with_its_contents: function(node) {
 			var child = node.firstChild;
@@ -234,9 +234,6 @@
 		this.workspace = util.create_top('div', 'secure_wysiwyg_editor');
 		
 		var x = util.create_top('div', 'editor-top', this.workspace);
-		if ($.browser.msie) {
-			x.style.backgroundPosition = '0px 8px';
-		}
 		var editor = util.create_top('div', 'editor', this.workspace);
 		util.create_top('div', 'editor-bottom', this.workspace);
 		
@@ -273,6 +270,7 @@
 		// visual and text editors
 		this.source = util.create_top('textarea', 'textarea', editor_keeper);
 		this.iframe = util.create_top('iframe', 'textarea', editor_keeper);
+		this.iframe.setAttribute('frameborder', 0);
 		this.is_msie = $.browser.msie;
 		
 		util.wysiwyg = this;
@@ -360,7 +358,7 @@
 
 			var source_mode = this.source.style.display !== 'none';
 			for (var i in this.buttons) {
-				var b = this.buttons[i];
+				var b = this.buttons[i], bel = b.el.parentNode;
 				if (source_mode) {
 					if (b.name === 'show_source') {
 						util.remove_class(b.el, 'disabled');
@@ -370,58 +368,57 @@
 					util.remove_class(b.el, 'click');
 					continue;
 				}
-				
 				switch (b.name) {
 				case 'code':
 					if (util.in_array('bb-code', parent_classes) !== -1) {
-						util.add_class(b.el.parentNode, 'click');
+						util.add_class(bel, 'click');
 					} else {
-						util.remove_class(b.el.parentNode, 'click');
+						util.remove_class(bel, 'click');
 					}
 					break;
 				case 'insertimage':
 					if (node && node.nodeName === 'IMG') {
-						util.add_class(b.el, 'click');
+						util.add_class(bel, 'click');
 					} else {
-						util.remove_class(b.el, 'click');
+						util.remove_class(bel, 'click');
 					}
-					util.remove_class(b.el, 'disabled');
+					util.remove_class(bel, 'disabled');
 					break;
 				case 'spoiler':
 					if (util.in_array('spoiler', parent_classes) !== -1) {
-						util.add_class(b.el.parentNode, 'click');
+						util.add_class(bel, 'click');
 					} else {
-						util.remove_class(b.el.parentNode, 'click');
+						util.remove_class(bel, 'click');
 					}
-					util.remove_class(b.el.parentNode, 'disabled');
+					util.remove_class(bel, 'disabled');
 					break;
 				case 'setcolor':
 				case 'show_source':
-					util.remove_class(b.el.parentNode, 'disabled');
+					util.remove_class(bel, 'disabled');
 				break;
 				case 'quote':
 					if (util.in_array('BLOCKQUOTE', parents) !== -1) {
-						util.add_class(b.el.parentNode, 'click');
+						util.add_class(bel, 'click');
 					} else {
-						util.remove_class(b.el.parentNode, 'click');
+						util.remove_class(bel, 'click');
 					}
-					util.remove_class(b.el.parentNode, 'disabled');
+					util.remove_class(bel, 'disabled');
 					break;
 				default:
 					try {
 						if (!this.doc.queryCommandEnabled(b.name)) {
-							util.add_class(b.el.parentNode, 'disabled');
+							util.add_class(bel, 'disabled');
 						} else {
-							util.remove_class(b.el.parentNode, 'disabled');
+							util.remove_class(bel, 'disabled');
 						}
 					} catch (e) {
 						continue;
 					}
 					try {
 						if (this.doc.queryCommandState(b.name)) {
-							util.add_class(b.el.parentNode, 'click');
+							util.add_class(bel, 'click');
 						} else {
-							util.remove_class(b.el.parentNode, 'click');
+							util.remove_class(bel, 'click');
 						}
 					} catch (e) {
 					}
@@ -952,6 +949,7 @@
 			} else {
 				iframe.style.display = '';
 				this.source.style.display = 'none';
+				this.doc.body.innerHTML = this.source.value;
 				try {
 					//iframe.contentWindow.document.execCommand("useCSS", false, true);
 				} catch (e) {
