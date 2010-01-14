@@ -237,7 +237,7 @@
 		this.doc = win.document;
 
 		this.create_range = function() {
-			this.r = this.win.document.selection.createRange();
+			this.r = this.doc.selection.createRange();
 		};
 
 		this.get_start = function () {
@@ -276,7 +276,18 @@
 
 		this.wrap_with = function (tag_name, class_name) {
 			this.create_range();
-			this.r.pasteHTML('<' + tag_name + (class_name ? ' class="' + class_name + '"' : '') + '>' + this.r.htmlText + '</' + tag_name + '>');
+			var params = [];
+			if (class_name) {
+				if (typeof class_name === 'string') {
+					class_name = {'class':class_name};
+				}
+				for (var i in class_name) {
+					if (class_name.hasOwnProperty(i)) {
+						params.push(i + '="' + class_name[i] + '"');
+					}
+				}
+			}
+			this.r.pasteHTML('<' + tag_name + ' ' + params.join(' ') + '>' + this.r.htmlText + '</' + tag_name + '>');
 			this.r.select();
 			return this.r.parentElement();
 		};
@@ -284,6 +295,24 @@
 		this.get_selection_as_node = function () {
 			this.create_range();
 			return this.r.htmlText;
+		};
+
+		this.save_selection = function() {
+			this.create_range();
+			if (this.r.item) {
+				var n = this.r.item(0);
+				this.r = this.doc.body.createTextRange();
+				this.r.moveToElementText(n);
+			}
+			this.bookmark = this.r.getBookmark();
+		};
+
+		this.restore_selection = function() {
+			if (this.bookmark) {
+				this.win.focus();
+				this.r.moveToBookmark(this.bookmark);
+				this.r.select();
+			}
 		};
 
 	};
@@ -321,7 +350,15 @@
 			var r = get_range();
 			var new_parent = this.doc.createElement(tag_name);
 			if (class_name) {
-				new_parent.className = class_name;
+				if (typeof class_name == 'string') {
+					new_parent.className = class_name;
+				} else {
+					for (var i in class_name) {
+						if (class_name.hasOwnProperty(i)) {
+							new_parent.setAttribute(i, class_name[i]);
+						}
+					}
+				}
 			}
 			r.surroundContents(new_parent);
 			return new_parent;
@@ -343,8 +380,26 @@
 
 		var x = util.create_top('div', 'editor-top', this.workspace);
 		var editor = util.create_top('div', 'editor', this.workspace);
-		util.create_top('div', 'editor-bottom', this.workspace);
-
+		var btm = util.create_top('div', 'editor-bottom', this.workspace);
+		btm.innerHTML = '<div class="editor-stretch"><a title="растянуть" href="#"><img alt="растянуть" src="images/stretch.gif"/></a></div>';
+		btm.firstChild.onmousedown = function (e) {
+			e = e || window.event;
+			var ip = {};
+			ip.y = e.clientY;
+			ip.h = editor.offsetHeight;
+			ip.eh = self.iframe.offsetHeight;
+			document.onmousemove = function (e) {
+				e = e || window.event;
+				editor.style.height = ip.h + e.clientY - ip.y + 'px';
+				self.iframe.style.height = ip.eh + e.clientY - ip.y + 'px';
+			};
+			document.onmouseup = function () {
+				document.onmousemove = null;
+				document.onmouseup = null;
+			};
+			return false;
+		};
+		
 		// top controls (with logo)
 		this.controls = util.create_top('div', 'btns-top', editor);
 		util.create_top('div', 'editor-logo', this.controls);
@@ -453,11 +508,11 @@
 
 	window.Wysiwyg.prototype = {
 		update_controls: function () {
-			return;
 			var node = this.selection.get_start();
 			var cur = node;
 			var parents = [];
 			var parent_classes = [];
+			var selection_collapsed = this.selection.collapsed();
 			while (cur && cur.nodeName) {
 				parents.push(cur.nodeName);
 				var cls = cur.getAttribute && cur.getAttribute('class');
@@ -467,7 +522,7 @@
 				cur = cur.parentNode;
 			}
 
-			var source_mode = this.source.style.display !== 'none';
+			var source_mode = this.mode === 'text';
 			for (var i in this.buttons) {
 				var b = this.buttons[i], bel = b.el.parentNode;
 				if (source_mode) {
@@ -505,7 +560,23 @@
 					break;
 				case 'setcolor':
 				case 'show_source':
+				case 'hide':
+				case 'media':
+				case 'smile':
 					util.remove_class(bel, 'disabled');
+				break;
+				case 'createlink':
+					if (util.in_array('A', parents) !== -1) {
+						util.add_class(bel, 'click');
+						util.remove_class(bel, 'disabled');
+					} else {
+						util.remove_class(bel, 'click');
+						if (selection_collapsed) {
+							util.add_class(bel, 'disabled');
+						} else {
+							util.remove_class(bel, 'disabled');
+						}
+					}
 				break;
 				case 'quote':
 					if (util.in_array('BLOCKQUOTE', parents) !== -1) {
@@ -633,8 +704,14 @@
 				command: 'setcolor',
 				action: function () {
 					w.show_colorpicker(function (color) {
-						w.doc.execCommand('forecolor', false, color);
-						w.win.focus();
+						if (w.selection.collapsed()) {
+							var colored_span = util.create('span');
+							colored_span.setAttribute('style', 'color:' + color);
+							w.selection.insert_node(colored_span);
+							w.win.focus();
+						} else {
+							w.selection.wrap_with('span', {'style':'color:' + color});
+						}
 					});
 				}
 			});
@@ -696,6 +773,7 @@
 						w.win.focus();
 					}, properties);
 				},
+				label: '+ Файл',
 				panel: 'btns_big'
 			});
 
@@ -704,11 +782,18 @@
 				image: 'bb-link',
 				command: 'createlink',
 				action: function () {
-					w.show_linkcreator(function (link) {
-						w.doc.execCommand('createlink', false, link);
-						w.win.focus();
+					var linkNode = util.get_parent_by_tag_name(w.selection.get_start(), 'a');
+					w.show_linkcreator(linkNode, function (link) {
+						//w.doc.execCommand('createlink', false, link);
+						if (linkNode) {
+							linkNode.setAttribute('href', link);
+						} else {
+							w.selection.wrap_with('a', {'href':link});
+							w.win.focus();
+						}
 					});
 				},
+				label: 'Ссылка',
 				panel: 'btns_big'
 			});
 
@@ -776,26 +861,32 @@
 			});
 
 			/// hide
-			// todo: save and restore range if msie
 			commands.push({
 				image: 'bb-hide',
 				command: 'hide',
 				action: function () {
-					var code = util.get_parent_by_class_name(w.selection.get_start(), 'bb-hide');
-					if (code) {
-						util.remove_node_with_its_contents(code);
-					} else {
-						w.show_hidecreator(function (value) {
-							if (w.selection.collapsed()) {
-								code = util.create('div', 'bb-hide');
-								code.setAttribute('title', value);
-								code.innerHTML = '<br/>';
-								w.selection.insert_node(code);
+					var hide = util.get_parent_by_class_name(w.selection.get_start(), 'bb-hide');
+					w.show_hidecreator(hide, function (value) {
+						if (hide) {
+							if (value) {
+								hide.setAttribute('value', value);
 							} else {
-								w.selection.wrap_with('div', 'bb-hide');
+								util.remove_node_with_its_contents(hide);
 							}
-						});
-					}
+							return;
+						}
+						if (w.selection.collapsed()) {
+							var code = util.create('div', 'bb-hide');
+							code.setAttribute('value', value);
+							code.innerHTML = '<span>&nbsp;</span><br/>';
+							w.selection.insert_node(code);
+						} else {
+							w.selection.wrap_with('div', {
+								'value': value,
+								'class': 'bb-hide'
+							});
+						}
+					});
 					w.win.focus();
 				},
 				panel: 'btns_small'
@@ -906,6 +997,9 @@
 
 				switch (cmd.panel) {
 				case 'btns_big':
+					/* var label = util.create_top('span');
+					label.innerHTML = ' ' + cmd.label;
+					button.appendChild(label); */
 					ul_left_big.appendChild(button_holder);
 					break;
 				case 'btns_small':
@@ -932,29 +1026,34 @@
 				for (var g = 0; g < 6; g += 1) {
 					for (var b = 0; b < 6; b += 1) {
 						var c = colors[r] + colors[g] + colors[b];
-						html += '<li style="background:#' + c + '">&nbsp;</li>';
+						html += '<li style="background-color:#' + c + '">&nbsp;</li>';
 					}
 				}
 				html += '</ul><ul class="colorpicker">';
 			}
 			html += '</ul>';
 			div.innerHTML = html;
-			show_modal_dialog({caption: 'Выбор цвета'}, div, function (div) {
-				var colors = div.firstChild.color;
-				for (var i = 0, len = colors.length; i < len; i++ ) {
-					if (colors[i].checked) {
-						callback(colors[i].value);
-						break;
-					}
+			var selected_color;
+			div.onclick = function (e) {
+				e = e || window.event;
+				var t = e.target || e.srcElement;
+				/* var h = '';
+				for (var i in e) h += i + '=' + e[i] + ',';
+				alert(h); */
+				if (t && t.nodeName === 'LI') {
+					selected_color = t.style.backgroundColor;
 				}
+			};
+			this.show_modal_dialog({caption: 'Выбор цвета'}, div, function (div) {
+				callback(selected_color);
 			});
 		},
-		show_linkcreator: function (callback) {
+		show_linkcreator: function (linkNode, callback) {
 			var div = document.createElement('div');
 			div.innerHTML = '<form><div class="modal-type">Адрес ссылки:</div>' +
-				'<input type="text" name="url" class="modal-text" />' +
+				'<input type="text" name="url" class="modal-text" value="' + (linkNode ? linkNode.getAttribute('href') : '') + '" />' +
 				'</form>';
-			show_modal_dialog({caption: 'Вставка ссылки'}, div, function (div) {
+			this.show_modal_dialog({caption: 'Вставка ссылки'}, div, function (div) {
 				callback(div.firstChild.url.value);
 			});
 		},
@@ -992,7 +1091,7 @@
 					f.align.selectedIndex = 2;
 				}
 			}
-			show_modal_dialog({caption: 'Вставка изображения'}, div, function (div) {
+			this.show_modal_dialog({caption: 'Вставка изображения'}, div, function (div) {
 				var f = div.firstChild;
 				callback({
 					src: f.src.value,
@@ -1010,17 +1109,28 @@
 			div.innerHTML = '<form><div class="modal-type">Код видео:</div>' +
 				'<textarea name="code"></textarea>' +
 			'</form>';
-			show_modal_dialog({caption: 'Вставка медиа'}, div, function (div) {
+			this.show_modal_dialog({caption: 'Вставка медиа'}, div, function (div) {
 				callback(div.firstChild.code.value);
 			});
 		},
-		show_hidecreator: function (callback) {
+		show_hidecreator: function (hideNode, callback) {
 			var div = document.createElement('div');
-			div.innerHTML = '<form><div class="modal-type">Количество&nbsp;сообщений:</div>' +
-				'<input name="count" class="modal-text" />' +
+			div.innerHTML = '<form><div class="modal-type">Количество сообщений:</div>' +
+			'<input name="count" class="modal-text" value="' + (hideNode ? hideNode.getAttribute('value') : '') + '" />' +
 			'</form>';
-			show_modal_dialog({caption: 'Вставка скрытого контента'}, div, function (div) {
-				callback(div.firstChild.count.value);
+			this.show_modal_dialog({caption: 'Вставка скрытого контента'}, div, function (div) {
+				var v = parseInt(div.firstChild.count.value, 10);
+				if (isNaN(v)) {
+					div.firstChild.count.focus();
+					error = util.create_top('div');
+					error.style.color = 'red';
+					error.style.marginLeft = '103px';
+					error.style.padding = '5px';
+					error.innerHTML = 'Введите число';
+					div.firstChild.appendChild(error);
+					return false;
+				}
+				callback(v);
 			});
 		},
 		switch_design_mode: function () {
@@ -1043,87 +1153,93 @@
 				//this.export_textarea();
 				this.mode = 'design';
 			}
+		},
+		show_modal_dialog: function(options, contents_div, callback) {
+			var self = this;
+			self.selection.save_selection && self.selection.save_selection();
+			var overlay = document.createElement('div');
+			overlay.id = 'overlay';
+			document.body.appendChild(overlay);
+
+			var dialog_wrapper = document.createElement('div');
+			util.add_class(dialog_wrapper, 'modalwindow');
+			overlay.appendChild(dialog_wrapper);
+
+			// round corners
+			var corners = ['mtl', 'mtr', 'mbl', 'mbr'];
+			for (var i = 0; i < 4; i++ ) {
+				var corner = document.createElement('div');
+				util.add_class(corner, corners[i]);
+				dialog_wrapper.appendChild(corner);
+			}
+
+			var dialog = document.createElement('div');
+			util.add_class(dialog, 'modalmain');
+			dialog_wrapper.appendChild(dialog);
+
+			var header = document.createElement('div');
+			header.innerHTML = options.caption;
+			util.add_class(header, 'modaltitle');
+			dialog.appendChild(header);
+
+			// make header draggable
+			var init_pos = {x: 0, y: 0, t: 0, l: 0};
+			header.onmousedown = function (e) {
+				e = e || window.event;
+				init_pos.x = e.clientX;
+				init_pos.y = e.clientY;
+				init_pos.t = dialog_wrapper.offsetTop;
+				init_pos.l = dialog_wrapper.offsetLeft;
+				init_pos.bounds = util.calc_drag_bounds(dialog_wrapper);
+				document.onmouseup = function () {
+					document.onmousemove = null;
+					document.onmouseup = null;
+				};
+				document.onmousemove = function (e) {
+					e = e || window.event;
+					var x = init_pos.l + e.clientX - init_pos.x;
+					var y = init_pos.t + e.clientY - init_pos.y;
+					x = Math.max(x, init_pos.bounds.minX);
+					x = Math.min(x, init_pos.bounds.maxX);
+					y = Math.max(y, init_pos.bounds.minY);
+					y = Math.min(y, init_pos.bounds.maxY);
+					dialog_wrapper.style.left = x + 'px';
+					dialog_wrapper.style.top = y + 'px';
+				};
+				return false;
+			}
+
+			var descr_div = document.createElement('div');
+			util.add_class(descr_div, 'modaldescr');
+
+			dialog.appendChild(descr_div);
+			descr_div.appendChild(contents_div);
+
+			var footer = document.createElement('div');
+			util.add_class(footer, 'modalclose');
+			dialog.appendChild(footer);
+
+			var btn_ok = document.createElement('button');
+			btn_ok.innerHTML = 'OK';
+			footer.appendChild(btn_ok);
+			btn_ok.onclick = function () {
+				self.selection.restore_selection && self.selection.restore_selection();
+				var r = callback(contents_div);
+				if (r === false) {
+					return false;
+				}
+				overlay.parentNode.removeChild(overlay);
+			}
+
+			var btn_cancel = document.createElement('button');
+			btn_cancel.innerHTML = 'Cancel';
+			btn_cancel.onclick = function () {
+				overlay.parentNode.removeChild(overlay);
+			}
+			footer.appendChild(btn_cancel);
+
+			overlay.style.visibility = 'visible';
 		}
 	};
 
-	function show_modal_dialog(options, contents_div, callback) {
-		var overlay = document.createElement('div');
-		overlay.id = 'overlay';
-		document.body.appendChild(overlay);
-
-		var dialog_wrapper = document.createElement('div');
-		util.add_class(dialog_wrapper, 'modalwindow');
-		overlay.appendChild(dialog_wrapper);
-
-		// round corners
-		var corners = ['mtl', 'mtr', 'mbl', 'mbr'];
-		for (var i = 0; i < 4; i++ ) {
-			var corner = document.createElement('div');
-			util.add_class(corner, corners[i]);
-			dialog_wrapper.appendChild(corner);
-		}
-
-		var dialog = document.createElement('div');
-		util.add_class(dialog, 'modalmain');
-		dialog_wrapper.appendChild(dialog);
-
-		var header = document.createElement('div');
-		header.innerHTML = options.caption;
-		util.add_class(header, 'modaltitle');
-		dialog.appendChild(header);
-
-		// make header draggable
-		var init_pos = {x: 0, y: 0, t: 0, l: 0};
-		header.onmousedown = function (e) {
-			e = e || window.event;
-			init_pos.x = e.clientX;
-			init_pos.y = e.clientY;
-			init_pos.t = dialog_wrapper.offsetTop;
-			init_pos.l = dialog_wrapper.offsetLeft;
-			init_pos.bounds = util.calc_drag_bounds(dialog_wrapper);
-			document.onmouseup = function () {
-				document.onmousemove = null;
-				document.onmouseup = null;
-			};
-			document.onmousemove = function (e) {
-				e = e || window.event;
-				var x = init_pos.l + e.clientX - init_pos.x;
-				var y = init_pos.t + e.clientY - init_pos.y;
-				x = Math.max(x, init_pos.bounds.minX);
-				x = Math.min(x, init_pos.bounds.maxX);
-				y = Math.max(y, init_pos.bounds.minY);
-				y = Math.min(y, init_pos.bounds.maxY);
-				dialog_wrapper.style.left = x + 'px';
-				dialog_wrapper.style.top = y + 'px';
-			};
-			return false;
-		}
-
-		var descr_div = document.createElement('div');
-		util.add_class(descr_div, 'modaldescr');
-
-		dialog.appendChild(descr_div);
-		descr_div.appendChild(contents_div);
-
-		var footer = document.createElement('div');
-		util.add_class(footer, 'modalclose');
-		dialog.appendChild(footer);
-
-		var btn_ok = document.createElement('button');
-		btn_ok.innerHTML = 'OK';
-		footer.appendChild(btn_ok);
-		btn_ok.onclick = function () {
-			callback(contents_div);
-			overlay.parentNode.removeChild(overlay);
-		}
-
-		var btn_cancel = document.createElement('button');
-		btn_cancel.innerHTML = 'Cancel';
-		btn_cancel.onclick = function () {
-			overlay.parentNode.removeChild(overlay);
-		}
-		footer.appendChild(btn_cancel);
-
-		overlay.style.visibility = 'visible';
-	}
 })(jQuery);
