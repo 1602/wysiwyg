@@ -6,7 +6,7 @@
 (function ($) {
 
 	var undef;
-	
+
 	var util = {
 		get_parents: function (node) {
 			var parents = [];
@@ -142,10 +142,17 @@
 			}
 			return true;
 		},
-		create: function(nodeName) {
-			return this.wysiwyg.doc.createElement(nodeName);
+		create: function(nodeName, class_name, parent_node) { // todo: uncopypaste
+			var node = this.wysiwyg.doc.createElement(nodeName);
+			if (class_name) {
+				this.add_class(node, class_name);
+			}
+			if (parent_node) {
+				parent_node.appendChild(node);
+			}
+			return node;
 		},
-		create_top: function(node_name, class_name, parent_node) {
+		create_top: function(node_name, class_name, parent_node) { // todo: uncopypaste
 			var node = document.createElement(node_name);
 			if (class_name) {
 				this.add_class(node, class_name);
@@ -174,12 +181,10 @@
 			el.className = classes;
 		},
 		has_class: function(el, class_name) {
-			if (!el || !el.getAttribute) return false;
-			var classes = el.getAttribute('class');
-			if (!classes) {
+			if (!el || !el.className) {
 				return false;
 			}
-			return class_name.toLowerCase().indexOf(classes.toLowerCase()) !== -1;
+			return el.className.toLowerCase().indexOf(class_name.toLowerCase()) !== -1;
 		},
 		index_of_child: function(node) {
 			return 0;
@@ -189,14 +194,11 @@
 			}
 			return ix;
 		},
-		add_class: function (el, class_name) {
-			if (!el || !el.getAttribute || this.has_class(el, class_name)) return false;
-			var classes = el.getAttribute('class');
-			if (classes) {
-				classes = classes.split(/\s+/);
-			} else {
-				classes = [];
+		add_class: function(el, class_name) {
+			if (this.has_class(el, class_name)) {
+				return false;
 			}
+			var classes = el.className ? el.className.split(/\s+/) : [];
 			classes.push(class_name);
 			el.className = classes.join(' ');
 		},
@@ -228,16 +230,16 @@
 			return false;
 		}
 	};
-	
+
 	var ie_selection = function (win) {
 		var self = this;
 		this.win = win;
 		this.doc = win.document;
-		
+
 		this.create_range = function() {
 			this.r = this.win.document.selection.createRange();
 		};
-		
+
 		this.get_start = function () {
 			this.create_range();
 			if (this.r.item) {
@@ -248,7 +250,7 @@
 			return r.parentElement();
 			//return s && s.nodeName == 'BODY' ? s.firstChild : s;
 		};
-		
+
 		this.insert_node = function (node) {
 			this.create_range();
 			this.r.collapse(false);
@@ -263,7 +265,7 @@
 			}
 			r.pasteHTML(html);
 		};
-		
+
 		this.collapsed = function () {
 			this.create_range();
 			if (this.r.item) {
@@ -271,35 +273,39 @@
 			}
 			return this.r.boundingWidth === 0;
 		};
-		
-		this.wrap_with = function (tag_name) {
+
+		this.wrap_with = function (tag_name, class_name) {
 			this.create_range();
-			alert(this.r.htmlText);
-			this.r.pasteHTML('<' + tag_name + '>' + this.r.htmlText + '</' + tag_name + '>');
+			this.r.pasteHTML('<' + tag_name + (class_name ? ' class="' + class_name + '"' : '') + '>' + this.r.htmlText + '</' + tag_name + '>');
 			this.r.select();
 			return this.r.parentElement();
 		};
-		
+
+		this.get_selection_as_node = function () {
+			this.create_range();
+			return this.r.htmlText;
+		};
+
 	};
-	
+
 	var normal_selection = function (win) {
 		var self = this;
 		this.win = win;
 		this.doc = win.document;
-		
+
 		function get_selection() {
 			return self.win.getSelection ? self.win.getSelection() : self.doc.selection;
 		}
-		
+
 		function get_range() {
 			var sel = get_selection();
 			return sel.rangeCount > 0 ? sel.getRangeAt(0) : self.doc.createRange();
 		}
-		
+
 		this.get_start = function () {
 			return get_range().startContainer;
 		};
-		
+
 		this.insert_node = function (node) {
 			var r = get_range();
 			r.insertNode(node);
@@ -309,32 +315,40 @@
 			s.removeAllRanges();
 			s.addRange(r);
 			*/
-		}
-		
-		this.wrap_with = function (tag_name) {
+		};
+
+		this.wrap_with = function (tag_name, class_name) {
 			var r = get_range();
 			var new_parent = this.doc.createElement(tag_name);
+			if (class_name) {
+				new_parent.className = class_name;
+			}
 			r.surroundContents(new_parent);
 			return new_parent;
-		}
-		
+		};
+
 		this.collapsed = function () {
 			return get_range().collapsed;
-		}
+		};
+
+		this.get_selection_as_node = function () {
+			var r = get_range();
+			return r.extractContents();
+		};
 	};
-	
+
 	window.Wysiwyg = function(textarea) {
 		var self = this;
 		this.workspace = util.create_top('div', 'secure_wysiwyg_editor');
-		
+
 		var x = util.create_top('div', 'editor-top', this.workspace);
 		var editor = util.create_top('div', 'editor', this.workspace);
 		util.create_top('div', 'editor-bottom', this.workspace);
-		
+
 		// top controls (with logo)
 		this.controls = util.create_top('div', 'btns-top', editor);
 		util.create_top('div', 'editor-logo', this.controls);
-		
+
 		// hide and show
 		var hideandshow_div = util.create_top('div', 'hideandshow', editor);
 		var hideandshow_link = util.create_top('a', false, hideandshow_div);
@@ -346,31 +360,31 @@
 			// todo: resize textarea/iframe
 			return false;
 		};
-		
+
 		// btns-left
 		var left_btns = util.create_top('div', 'btns-left', editor);
 		this.btns_big = util.create_top('div', 'btns-big', left_btns);
 		this.btns_small = util.create_top('div', 'btns-small', left_btns);
-		
+
 		// textplace
 		var textplace = util.create_top('div', 'textplace', editor);
 		util.create_top('div', 'clear', editor);
-		
+
 		// editor area
 		util.create_top('div', 'textarea-top', textplace);
 		var editor_keeper = util.create_top('div', 'textborder', textplace);
 		util.create_top('div', 'textarea-bottom', textplace);
-		
+
 		// visual and text editors
 		this.source = util.create_top('textarea', 'textarea', editor_keeper);
 		this.iframe = util.create_top('iframe', 'textarea', editor_keeper);
 		this.iframe.setAttribute('frameborder', 0);
 		this.is_msie = $.browser.msie;
-		
+
 		util.wysiwyg = this;
-		
+
 		textarea.parentNode.insertBefore(this.workspace, textarea.nextSibling);
-		
+
 		var styles = {
 			source: {
 				display: 'none'
@@ -408,9 +422,9 @@
 
 		var cbs = this.is_msie ? ie_selection : normal_selection;
 		this.selection = new cbs(this.win);
-		
+
 		this.win.focus();
-		
+
 		$(this.doc)
 		.keydown(function(e) {
 			if ($.browser.safari && e.keyCode == 13) {
@@ -435,10 +449,11 @@
 		});
 
 		this.init_controls();
-	}
+	};
 
-	Wysiwyg.prototype = {
+	window.Wysiwyg.prototype = {
 		update_controls: function () {
+			return;
 			var node = this.selection.get_start();
 			var cur = node;
 			var parents = [];
@@ -519,7 +534,7 @@
 					} catch (e) {
 					}
 				}
-				
+
 			}
 		},
 		set_status: function (text) {
@@ -624,7 +639,7 @@
 				}
 			});
 			commands.push('|');
-			
+
 			// show source code
 			commands.push({
 				image: 'page_code',
@@ -633,16 +648,16 @@
 					w.switch_design_mode();
 				}
 			});
-			
+
 			//////////////////////////////////////////////////////
-			
-			// image
+
+			/// image
 			commands.push({
 				image: 'bb-file',
 				command: 'insertimage',
 				action: function () {
 					var properties;
-					var selStart = w.selection.getStart();
+					var selStart = w.selection.get_start();
 					if (selStart && selStart.nodeName === 'IMG' && selStart.getAttribute('class') !== 'smile') {
 						properties = {};
 						properties.src = selStart.getAttribute('src');
@@ -677,14 +692,14 @@
 							link.setAttribute('href', properties.link);
 							link.appendChild(image);
 						}
-						w.selection.insertNode(properties.link ? link : image);
+						w.selection.insert_node(properties.link ? link : image);
 						w.win.focus();
 					}, properties);
 				},
 				panel: 'btns_big'
 			});
-			
-			// link
+
+			/// link
 			commands.push({
 				image: 'bb-link',
 				command: 'createlink',
@@ -696,10 +711,10 @@
 				},
 				panel: 'btns_big'
 			});
-			
+
 			//////////////////////////////////////////////////////
-			
-			// quote
+
+			/// quote
 			commands.push({
 				image: 'bb-quote',
 				command: 'quote',
@@ -710,139 +725,103 @@
 						//w.selection.cleanCache();
 					} else {
 						if (w.selection.collapsed()) {
-							var quote = w.doc.createElement('blockquote');
+							quote = w.doc.createElement('blockquote');
 							quote.innerHTML = '<br />';
 							w.selection.insert_node(quote);
-							//w.selection.select(quote.firstChild, quote.firstChild);
 						} else {
-							//alert(w.selection.r.htmlText);
 							w.selection.wrap_with('blockquote');
-							//nodes = w.selection.selected({wrap : 'all', tag : 'blockquote'});
-							//nodes.length && w.selection.select(nodes[0], nodes[nodes.length-1]);
 						}
 					}
 					w.win.focus();
-					
+
 				},
 				panel: 'btns_small'
 			});
-			
-			// spoiler
+
+			/// spoiler
 			commands.push({
 				image: 'bb-spoiler',
 				command: 'spoiler',
 				action: function () {
-					var node = w.selection.getStart();
-					var found;
-					while (node && node.nodeName) {
-						var cls = node.getAttribute && node.getAttribute('class');
-						if (cls && cls.toLowerCase() === 'spoiler' && node.parentNode) {
-							found = node;
-							break;
-						}
-						node = node.parentNode;
-					}
-					if (!found) {
-						var toggler = w.doc.createElement('div');
-						util.add_class(toggler, 'toggler');
+					var node = w.selection.get_start();
+					var spoiler = util.get_parent_by_class_name(node, 'spoiler');
+					if (!spoiler) {
+						spoiler = util.create('div', 'spoiler');
+
+						var toggler = util.create('div', 'toggler', spoiler);
 						toggler.innerHTML = 'click to toggle spoiler';
 						toggler.setAttribute('onclick', 'var s = this.nextSibling.style; s.display = s.display ? \'none\' : \'\'; return false; ');
-						
+
+						var hidden_text = util.create('div', 'hidden_text', spoiler);
+
 						if (w.selection.collapsed()) {
-							var spoiler = w.doc.createElement('div');
-							util.add_class(spoiler, 'spoiler');
-							var hidden_text = w.doc.createElement('div');
-							util.add_class(hidden_text, 'hidden_text');
 							hidden_text.innerHTML = '<br/>';
-							spoiler.appendChild(toggler);
-							spoiler.appendChild(hidden_text);
-							w.selection.insertNode(spoiler);
 						} else {
-							// hidden text
-							var nodes = w.selection.selected({wrap : 'all', tag : 'div'});
-							var hidden_text = nodes[0];
-							util.add_class(hidden_text, 'hidden_text');
-							w.selection.select(nodes[0], nodes[nodes.length - 1]);
-							// spoiler (top-level)
-							var nds = w.selection.selected({wrap : 'all', tag : 'div'});
-							var spoiler = nds[0];
-							util.add_class(spoiler, 'spoiler');
-							spoiler.insertBefore(toggler, spoiler.firstChild);
+							if (w.is_msie) {
+								hidden_text.innerHTML = w.selection.get_html();
+							} else {
+								hidden_text.appendChild(w.selection.get_selection_as_node());
+							}
 						}
-						w.selection.select(hidden_text.firstChild, hidden_text.lastChild);
+
+						w.selection.insert_node(spoiler);
 					} else {
-						found.parentNode.removeChild(found);
-						w.selection.cleanCache();
+						spoiler.removeChild(spoiler.firstChild);
+						util.remove_node_with_its_contents(spoiler.lastChild);
+						util.remove_node_with_its_contents(spoiler);
 					}
 					w.win.focus();
 				},
 				panel: 'btns_small'
 			});
-			
-			// hide
+
+			/// hide
+			// todo: save and restore range if msie
 			commands.push({
 				image: 'bb-hide',
 				command: 'hide',
 				action: function () {
-					var code = util.get_parent_by_class_name(w.selection.getStart(), 'bb-hide');
-					// remove code
+					var code = util.get_parent_by_class_name(w.selection.get_start(), 'bb-hide');
 					if (code) {
 						util.remove_node_with_its_contents(code);
-						w.selection.cleanCache();
 					} else {
-						// add empty code block
-						if (w.selection.collapsed()) {
-							var code = w.doc.createElement('div');
-							util.add_class(code, 'bb-hide');
-							code.innerHTML = '<br/>';
-							w.selection.insertNode(code);
-							w.selection.select(code.firstChild, code.lastChild);
-						} else {
-							var code = w.selection.selected({wrap : 'all', tag : 'div'})[0];
-							util.add_class(code, 'bb-hide');
-						}
+						w.show_hidecreator(function (value) {
+							if (w.selection.collapsed()) {
+								code = util.create('div', 'bb-hide');
+								code.setAttribute('title', value);
+								code.innerHTML = '<br/>';
+								w.selection.insert_node(code);
+							} else {
+								w.selection.wrap_with('div', 'bb-hide');
+							}
+						});
 					}
-					/* w.show_hidecreator(function (value) {
-						if (w.selection.collapsed()) {
-							var hide = w.doc.createElement('div');
-							hide.setAttriute('class', 'bb-hide');
-							w.selection.insertNode(hide);
-						} else {
-							
-						}
-						w.win.focus();
-					}); */
+					w.win.focus();
 				},
 				panel: 'btns_small'
 			});
-			
-			// code
+
+			/// code
 			commands.push({
 				image: 'bb-code',
 				command: 'code',
 				action: function () {
-					var code = util.get_parent_by_class_name(w.selection.getStart(), 'bb-code');
-					// remove code
+					var code = util.get_parent_by_class_name(w.selection.get_start(), 'bb-code');
 					if (code) {
 						util.remove_node_with_its_contents(code);
-						w.selection.cleanCache();
 					} else {
-						// add empty code block
 						if (w.selection.collapsed()) {
-							var code = w.doc.createElement('pre');
-							util.add_class(code, 'bb-code');
+							code = util.create('pre', 'bb-code');
 							code.innerHTML = '<br/>';
-							w.selection.insertNode(code);
-							w.selection.select(code.firstChild, code.lastChild);
+							w.selection.insert_node(code);
 						} else {
-							var code = w.selection.selected({wrap : 'all', tag : 'pre'})[0];
-							util.add_class(code, 'bb-code');
+							w.selection.wrap_with('pre', 'bb-code');
 						}
 					}
 				},
 				panel: 'btns_small'
 			});
-			
+
 			// smile
 			commands.push({
 				image: 'bb-smile',
@@ -852,36 +831,35 @@
 				},
 				panel: 'btns_small'
 			});
-			
-			// media
+
+			/// media
+			// todo: bookmark range for msie
 			commands.push({
 				image: 'bb-media',
 				command: 'media',
 				action: function () {
-					var code = util.get_parent_by_class_name(w.selection.getStart(), 'bb-media');
-					if (code) {
-						code.parentNode.removeChild(code);
+					var media = util.get_parent_by_class_name(w.selection.get_start(), 'bb-media');
+					if (media) {
+						media.parentNode.removeChild(media);
 					} else {
 						w.show_media_dialog(function(html){
-							var node = w.doc.createElement('div');
-							util.add_class(node, 'bb-media');
-							node.innerHTML = html;
-							w.selection.insertNode(node);
+							media = util.create('div', 'bb-media');
+							media.innerHTML = html;
+							w.selection.insert_node(media);
 						});
 					}
-					//document.getElementById('preview').innerHTML = wysiwyg.doc.body.innerHTML;
 				},
 				panel: 'btns_small'
 			});
-			
-			// undo
+
+			/// undo
 			commands.push({
 				image: 'bb-prev',
 				action: 'undo',
 				panel: 'btns_small'
 			});
-			
-			// redo
+
+			/// redo
 			commands.push({
 				image: 'bb-next',
 				action: 'redo',
@@ -892,14 +870,14 @@
 			var ul_left_big = util.create_top('ul');
 			var ul_left_small = util.create_top('ul');
 			for (var i = 0, len = commands.length; i < len; i++) {
-				
+
 				var cmd = commands[i];
-				
+
 				if (cmd === '|') {
 					util.create_top('li', 'editor-separator', ul);
 					continue;
 				}
-				
+
 				var button_holder = util.create_top('li');
 				var button = util.create_top('a', false, button_holder);
 				var image = util.create_top('img', false, button);
@@ -925,7 +903,7 @@
 						return false;
 					};
 				})(cmd, button, editor);
-				
+
 				switch (cmd.panel) {
 				case 'btns_big':
 					ul_left_big.appendChild(button_holder);
@@ -936,7 +914,7 @@
 				default:
 					ul.appendChild(button_holder);
 				}
-				
+
 				w.buttons.push({
 					name: cmd.command || cmd.action,
 					el: button
@@ -1032,8 +1010,17 @@
 			div.innerHTML = '<form><div class="modal-type">Код видео:</div>' +
 				'<textarea name="code"></textarea>' +
 			'</form>';
-			show_modal_dialog({caption: 'Вставка ссылки'}, div, function (div) {
+			show_modal_dialog({caption: 'Вставка медиа'}, div, function (div) {
 				callback(div.firstChild.code.value);
+			});
+		},
+		show_hidecreator: function (callback) {
+			var div = document.createElement('div');
+			div.innerHTML = '<form><div class="modal-type">Количество&nbsp;сообщений:</div>' +
+				'<input name="count" class="modal-text" />' +
+			'</form>';
+			show_modal_dialog({caption: 'Вставка скрытого контента'}, div, function (div) {
+				callback(div.firstChild.count.value);
 			});
 		},
 		switch_design_mode: function () {
@@ -1114,7 +1101,7 @@
 
 		var descr_div = document.createElement('div');
 		util.add_class(descr_div, 'modaldescr');
-		
+
 		dialog.appendChild(descr_div);
 		descr_div.appendChild(contents_div);
 
@@ -1139,950 +1126,4 @@
 
 		overlay.style.visibility = 'visible';
 	}
-
-	Wysiwyg.prototype.selection = function(rte) {
-		this.rte      = rte;
-		var self      = this;
-		this.w3cRange = null;
-		var start, end, node, bm;
-
-		$(this.rte.doc)
-			.keyup(function(e) {
-				if (e.ctrlKey || e.metaKey || (e.keyCode >= 8 && e.keyCode <= 13) || (e.keyCode>=32 && e.keyCode<= 40) || e.keyCode == 46 || (e.keyCode >=96 && e.keyCode <= 111)) {
-					self.cleanCache();
-				}
-			})
-			.mousedown(function(e) {
-				if (e.target.nodeName == 'HTML') {
-					start = self.rte.doc.body;
-				} else {
-					start = e.target;
-				}
-				end   = node = null;
-			})
-			.mouseup(function(e) {
-				if (e.target.nodeName == 'HTML') {
-					end = self.rte.doc.body;
-				} else {
-					end = e.target;
-				}
-				end  = e.target;
-				node = null;
-			}).click();
-
-		/**
-		 * возвращает selection
-		 *
-		 * @return  Selection
-		 **/
-		function selection() {
-			return self.rte.win.getSelection ? self.rte.win.getSelection() : self.rte.win.document.selection;
-		}
-
-		/**
-		 * Вспомогательная функция
-		 * Возвращает самого верхнего родителя, отвечающего условию - текущая нода - его единственная непустая дочерняя нода
-		 *
-		 * @param   DOMElement  n нода, для которой ищем родителя
-		 * @param   DOMElement  p если задана - нода, выше которой не поднимаемся
-		 * @param   String      s строна поиска (left||right||null)
-		 * @return  DOMElement
-		 **/
-		function realSelected(n, p, s) {
-			while (n.nodeName != 'BODY' && n.parentNode && n.parentNode.nodeName != 'BODY' && (p ? n!== p && n.parentNode != p : 1) && ((s=='left' && util.is_first_not_empty(n)) || (s=='right' && util.is_last_not_empty(n)) || (util.is_first_not_empty(n) && util.is_last_not_empty(n))) ) {
-				n = n.parentNode;
-			}
-			return n;
-		}
-
-		/**
-		 * Возвращает TRUE, если выделение "схлопнуто"
-		 *
-		 * @return  bool
-		 **/
-		this.collapsed = function() {
-			return this.getRangeAt().isCollapsed();
-		}
-
-		/**
-		 * "Схлопывает" выделение 
-		 *
-		 * @param   bool  toStart  схлопнуть к начальной точке
-		 * @return  void
-		 **/
-		this.collapse = function(toStart) {
-			this.getRangeAt().collapse(toStart ? true : false);
-		}
-
-		/**
-		 * Возвращает TextRange
-		 * Для нормальных браузеров - нативный range
-		 * для "самизнаетечего" - эмуляцию w3c range
-		 *
-		 * @return  range|w3cRange
-		 **/
-		this.getRangeAt = function(updateW3cRange) {
-			if (this.rte.is_msie) {
-				if (!this.w3cRange) {
-					this.w3cRange = new this.rte.w3cRange(this.rte);
-				}
-				updateW3cRange && this.w3cRange.update();
-				return this.w3cRange;
-			}
-
-			var s = selection();
-			var r = s.rangeCount > 0 ? s.getRangeAt(0) : this.rte.doc.createRange();
-			r.getStart = function() {
-				return this.startContainer.nodeType==1 
-					? this.startContainer.childNodes[Math.min(this.startOffset, this.startContainer.childNodes.length-1)] 
-					: this.startContainer;
-			}
-
-			r.getEnd = function() {
-				return this.endContainer.nodeType==1 
-					? this.endContainer.childNodes[ Math.min(this.startOffset == this.endOffset ? this.endOffset : this.endOffset-1, this.endContainer.childNodes.length-1)] 
-					: this.endContainer;
-			}
-			r.isCollapsed = function() {
-				return this.collapsed;
-			}
-			return r;
-		}
-
-		this.saveIERange = function() {
-			if (this.rte.is_msie) {
-				bm = this.getRangeAt().getBookmark();
-			}
-		}
-
-		this.restoreIERange = function() {
-			this.rte.is_msie && bm && this.getRangeAt().moveToBookmark(bm);
-		}
-
-		/**
-		 * Выделяет ноды
-		 *
-		 * @param   DOMNode  s  нода начала выделения
-		 * @param   DOMNode  e  нода конца выделения
-		 * @return  selection
-		 **/
-		this.select = function(s, e) {
-			e = e||s;
-			var r = this.getRangeAt();
-			r.setStartBefore(s);
-			r.setEndAfter(e);
-			if (this.rte.is_msie) {
-				r.select();
-			} else {
-				var s = selection();
-				s.removeAllRanges();
-				s.addRange(r);
-			}
-			return this.cleanCache();
-		}
-
-		/**
-		 * Выделяет содержимое ноды
-		 *
-		 * @param   Element  n  нода
-		 * @return  selection
-		 **/
-		this.selectContents = function(n) {
-			var r = this.getRangeAt();
-			if (n && n.nodeType == 1) {
-				if (this.rte.is_msie) {
-					r.range();
-					r.r.moveToElementText(n.parentNode);
-					r.r.select();
-				} else {
-					try {
-						r.selectNodeContents(n);
-					} catch (e) {
-						return this.rte.log('unable select node contents '+n);
-					}
-					var s = selection();
-					s.removeAllRanges();
-					s.addRange(r);
-				}
-			}
-			return this;
-		}
-
-		/**
-		 * Вставляет ноду в текущее выделение
-		 *
-		 * @param   Element  n  нода
-		 * @return  selection
-		 **/
-		this.insertNode = function(n, collapse) {
-			if (collapse && !this.collapsed()) {
-				this.collapse();
-			}
-
-			if (this.rte.is_msie) {
-				var html = n.nodeType == 3 ? n.nodeValue : $(this.rte.doc.createElement('span')).append($(n)).html();
-				var r = this.getRangeAt();
-				r.insertNode(html);
-			} else {
-				var r = this.getRangeAt();
-				r.insertNode(n);
-				r.setStartAfter(n);
-				r.setEndAfter(n);
-				var s = selection();
-				s.removeAllRanges();
-				s.addRange(r);
-			}
-			return this.cleanCache();
-		}
-
-		/**
-		 * Вставляет html в текущее выделение
-		 *
-		 * @param   Element  n  нода
-		 * @return  selection
-		 **/
-		this.insertHtml = function(html, collapse) {
-			if (collapse && !this.collapsed()) {
-				this.collapse();
-			}
-
-			if (this.rte.is_msie) {
-				this.getRangeAt().range().pasteHTML(html);
-			} else {
-				var n = $(this.rte.dom.create('span')).html(html||'').get(0);
-				this.insertNode(n);
-				$(n).replaceWith($(n).html());
-			}
-			return this.cleanCache();
-		}
-
-		/**
-		 * Вставляет ноду в текущее выделение
-		 *
-		 * @param   Element  n  нода
-		 * @return  selection
-		 **/
-		this.insertText = function(text, collapse) {
-			var n = this.rte.doc.createTextNode(text);
-			return this.insertHtml(n.nodeValue);
-		}
-
-		/**
-		 * Очищает кэш
-		 *
-		 * @return  selection
-		 **/
-		this.cleanCache = function() {
-			start = end = node = null;
-			return this;
-		}
-
-		/**
-		 * Возвращает ноду начала выделения
-		 *
-		 * @return  DOMElement
-		 **/
-		this.getStart = function() {
-			if (!start) {
-				var r = this.getRangeAt();
-				start = r.getStart();
-			}
-			return start;
-		}
-
-		/**
-		 * Возвращает ноду конца выделения
-		 *
-		 * @return  DOMElement
-		 **/
-		this.getEnd = function() {
-			if (!end) {
-				var r = this.getRangeAt();
-				end = r.getEnd();
-			}
-			return end;
-		}
-
-		/**
-		 * Возвращает выбраную ноду (общий контейнер всех выбранных нод)
-		 *
-		 * @return  Element
-		 **/
-		this.getNode = function() {
-			if (!node) {
-				node = this.rte.dom.findCommonAncestor(this.getStart(), this.getEnd());
-			}
-			return node;
-		}
-
-		/**
-		 * Возвращает массив выбранных нод
-		 *
-		 * @param   Object  o  параметры получения и обработки выбраных нод
-		 * @return  Array
-		 **/
-		this.selected = function(o) {
-			var opts = {
-				collapsed : false,  // вернуть выделение, даже если оно схлопнуто
-				blocks    : false,  // блочное выделение
-				filter    : false,  // фильтр результатов
-				wrap      : 'text', // что оборачиваем
-				tag       : 'span'  // во что оборачиваем
-			}
-			opts = $.extend({}, opts, o);
-
-			// блочное выделение - ищем блочную ноду, но не таблицу
-			if (opts.blocks) {
-				var n  = this.getNode(), _n = null;
-				if (_n = this.rte.dom.selfOrParent(n, 'selectionBlock') ) {
-					return [_n];
-				} 
-			}
-
-			var sel    = this.selectedRaw(opts.collapsed, opts.blocks);
-			var ret    = [];
-			var buffer = [];
-			var ndx    = null;
-
-			// оборачиваем ноды в буффере
-			function wrap() {
-
-				function allowParagraph() {
-					for (var i=0; i < buffer.length; i++) {
-						if (buffer[i].nodeType == 1 && (self.rte.dom.selfOrParent(buffer[i], /^P$/) || $(buffer[i]).find('p').length>0)) {
-							return false;
-						}
-					};
-					return true;
-				} 
-
-				if (buffer.length>0) {
-					var tag  = opts.tag == 'p' && !allowParagraph() ? 'div' : opts.tag;
-					var n    = util.wrap(buffer, tag);
-					ret[ndx] = n;
-					ndx      = null;
-					buffer   = [];
-				}
-			}
-
-			// добавляем ноды в буффер
-			function addToBuffer(n) {
-				if (n.nodeType == 1) {
-					if (/^(THEAD|TFOOT|TBODY|COL|COLGROUP|TR)$/.test(n.nodeName)) {
-						$(n).find('td,th').each(function() {
-							var tag = opts.tag == 'p' && $(this).find('p').length>0 ? 'div' : opts.tag;
-							var n = self.rte.dom.wrapContents(this, tag);
-							return ret.push(n);
-						})
-					} else if (/^(CAPTION|TD|TH|LI|DT|DD)$/.test(n.nodeName)) {
-						var tag = opts.tag == 'p' && $(n).find('p').length>0 ? 'div' : opts.tag;
-						var n = self.rte.dom.wrapContents(n, tag);
-						return ret.push(n);
-					} 
-				} 
-				var prev = buffer.length>0 ? buffer[buffer.length-1] : null;
-				if (prev && prev != util.prev_node(n)) {
-					wrap();
-				}
-				buffer.push(n); 
-				if (ndx === null) {
-					ndx = ret.length;
-					ret.push('dummy'); // заглушка для оборачиваемых элементов
-				}
-			}
-
-			if (sel.nodes.length>0) {
-
-				for (var i=0; i < sel.nodes.length; i++) {
-					var n = sel.nodes[i];
-						// первую и посл текстовые ноды разрезаем, если необходимо
-						 if (n.nodeType == 3 && (i==0 || i == sel.nodes.length-1) && $.trim(n.nodeValue).length>0) {
-							if (i==0 && sel.so>0) {
-								n = n.splitText(sel.so);
-							}
-							if (i == sel.nodes.length-1 && sel.eo>0) {
-								n.splitText(i==0 && sel.so>0 ? sel.eo - sel.so : sel.eo);
-							}
-						}
-
-						switch (opts.wrap) {
-							// оборачиваем только текстовые ноды с br
-							case 'text':
-								if ((n.nodeType == 1 && n.nodeName == 'BR') || (n.nodeType == 3 && $.trim(n.nodeValue).length>0)) {
-									addToBuffer(n);
-								} else if (n.nodeType == 1) {
-									ret.push(n);
-								}
-								break;
-							// оборачиваем все инлайн элементы	
-							case 'inline':
-								if (this.rte.dom.isInline(n)) {
-									addToBuffer(n);
-								} else if (n.nodeType == 1) {
-
-									ret.push(n);
-								}
-								break;
-							// оборачиваем все	
-							case 'all':
-								if (n.nodeType == 1 || !util.is_empty_node(n)) {
-									addToBuffer(n);
-								}
-								break;
-							// ничего не оборачиваем
-							default:
-								if (n.nodeType == 1 || !util.is_empty_node(n)) {
-									ret.push(n);
-								}
-						}
-				};
-				wrap();
-			}
-			// this.rte.log('buffer')
-			// this.rte.log(buffer)
-			// this.rte.log('ret')
-			// this.rte.log(ret)		
-			return opts.filter ? this.rte.dom.filter(ret, opts.filter) : ret;
-		}
-
-		this.dump = function(ca, s, e, so, eo) {
-			var r = this.getRangeAt();
-			this.rte.log('commonAncestorContainer');
-			this.rte.log(ca || r.commonAncestorContainer);
-			// this.rte.log('commonAncestorContainer childs num')
-			// this/rte.log((ca||r.commonAncestorContainer).childNodes.length)
-			this.rte.log('startContainer');
-			this.rte.log(s || r.startContainer);
-			this.rte.log('startOffset: '+(so>=0 ? so : r.startOffset));
-			this.rte.log('endContainer');
-			this.rte.log(e||r.endContainer);
-			this.rte.log('endOffset: '+(eo>=0 ? eo : r.endOffset));
-		}
-
-		/**
-		 * Возвращает массив выбранных нод, как есть
-		 *
-		 * @param   bool           возвращать если выделение схлопнуто
-		 * @param   bool           "блочное" выделение (текстовые ноды включаются полностью, не зависимо от offset)
-		 * @return  Array
-		 **/
-		this.selectedRaw = function(collapsed, blocks) {
-			var res = {so : null, eo : null, nodes : []};
-			var r   = this.getRangeAt(true);
-			var ca  = r.commonAncestorContainer;
-			var s, e;  // start & end nodes
-			var sf  = false; // start node fully selected
-			var ef  = false; // end node fully selected
-
-			// возвращает true, если нода не текстовая или выделена полностью
-			function isFullySelected(n, s, e) {
-				if (n.nodeType == 3) {
-					e = e>=0 ? e : n.nodeValue.length;
-					return (s==0 && e==n.nodeValue.length) || $.trim(n.nodeValue).length == $.trim(n.nodeValue.substring(s, e)).length;
-				} 
-				return true;
-			}
-
-			// возвращает true, если нода пустая или в ней не выделено ни одного непробельного символа
-			function isEmptySelected(n, s, e) {
-				if (n.nodeType == 1) {
-					return util.is_empty_node(n);
-				} else if (n.nodeType == 3) {
-					return $.trim(n.nodeValue.substring(s||0, e>=0 ? e : n.nodeValue.length)).length == 0;
-				} 
-				return true;
-			}
-
-			//this.dump()
-			// начальная нода
-			if (r.startContainer.nodeType == 1) {
-				if (r.startOffset<r.startContainer.childNodes.length) {
-					s = r.startContainer.childNodes[r.startOffset];
-					res.so = s.nodeType == 1 ? null : 0;
-				} else {
-					s = r.startContainer.childNodes[r.startOffset-1];
-					res.so = s.nodeType == 1 ? null : s.nodeValue.length;
-				}
-			} else {
-				s = r.startContainer;
-				res.so = r.startOffset;
-			} 
-
-			// выделение схлопнуто
-			if (r.collapsed) {
-				if (collapsed) {
-					//  блочное выделение
-					if (blocks) {
-						s = realSelected(s);
-						if (!util.is_empty_node(s) || (s = this.rte.dom.next(s))) {
-							res.nodes = [s];
-						} 
-
-						// добавляем инлайн соседей 
-						if (this.rte.dom.isInline(s)) {
-							res.nodes = this.rte.dom.toLineStart(s).concat(res.nodes, this.rte.dom.toLineEnd(s));
-						}
-
-						// offset для текстовых нод
-						if (res.nodes.length>0) {
-							res.so = res.nodes[0].nodeType == 1 ? null : 0;
-							res.eo = res.nodes[res.nodes.length-1].nodeType == 1 ? null : res.nodes[res.nodes.length-1].nodeValue.length;
-						}
-
-					} else if (!util.is_empty_node(s)) {
-						res.nodes = [s];
-					}
-
-				}
-				return res;
-			}
-
-			// конечная нода
-			if (r.endContainer.nodeType == 1) {
-				e = r.endContainer.childNodes[r.endOffset-1];
-				res.eo = e.nodeType == 1 ? null : e.nodeValue.length;
-			} else {
-				e = r.endContainer;
-				res.eo = r.endOffset;
-			} 
-			// this.rte.log('select 1')
-			//this.dump(ca, s, e, res.so, res.eo)
-
-			// начальная нода выделена полностью - поднимаемся наверх по левой стороне
-			if (s.nodeType == 1 || blocks || isFullySelected(s, res.so, s.nodeValue.length)) {
-				//			this.rte.log('start text node is fully selected')
-				s = realSelected(s, ca, 'left');
-				sf = true;
-				res.so = s.nodeType == 1 ? null : 0;
-			}
-			// конечная нода выделена полностью - поднимаемся наверх по правой стороне
-			if (e.nodeType == 1 || blocks || isFullySelected(e, 0,  res.eo)) {
-				//			this.rte.log('end text node is fully selected')
-				e = realSelected(e, ca, 'right');
-				ef = true;
-				res.eo = e.nodeType == 1 ? null : e.nodeValue.length;
-			}
-
-			// блочное выделение - если ноды не элементы - поднимаемся к родителю, но ниже контейнера
-			if (blocks) {
-				if (s.nodeType != 1 && s.parentNode != ca && s.parentNode.nodeName != 'BODY') {
-					s = s.parentNode;
-					res.so = null;
-				}
-				if (e.nodeType != 1 && e.parentNode != ca && e.parentNode.nodeName != 'BODY') {
-					e = e.parentNode;
-					res.eo = null;
-				}
-			}
-
-			// если контенер выделен полностью, поднимаемся наверх насколько можно
-			if (s.parentNode == e.parentNode && s.parentNode.nodeName != 'BODY' && (sf && util.is_first_not_empty(s)) && (ef && util.is_last_not_empty(e))) {
-				//			this.rte.log('common parent')
-				s = e = s.parentNode;
-				res.so = s.nodeType == 1 ? null : 0;
-				res.eo = e.nodeType == 1 ? null : e.nodeValue.length;
-			}
-			// начальная нода == конечной ноде
-			if (s == e) {
-				//			this.rte.log('start is end')
-				if (!util.is_empty_node(s)) {
-					res.nodes.push(s);
-				}
-				return res;
-			}
-			 // this.rte.log('start 2')
-			  //this.dump(ca, s, e, res.so, res.eo)
-
-			// находим начальную и конечную точки - ноды из иерархии родителей начальной и конечно ноды, у которых родитель - контейнер
-			var sp = s;
-			while (sp.nodeName != 'BODY' && sp.parentNode !== ca && sp.parentNode.nodeName != 'BODY') {
-				sp = sp.parentNode;
-			}
-			//this.rte.log(s.nodeName)
-			// this.rte.log('start point')
-			// this.rte.log(sp)
-
-			var ep = e;
-			//		this.rte.log(ep)
-			while (ep.nodeName != 'BODY' && ep.parentNode !== ca && ep.parentNode.nodeName != 'BODY') {
-				//this.rte.log(ep)
-				ep = ep.parentNode;
-			}
-			// this.rte.log('end point')
-			// this.rte.log(ep)
-
-			//  если начальная нода не пустая - добавляем ее
-			if (!isEmptySelected(s, res.so, s.nodeType==3 ? s.nodeValue.length : null)) {
-				res.nodes.push(s);
-			}
-			// поднимаемся от начальной ноды до начальной точки
-			var n = s;
-			while (n !== sp) {
-				var _n = n;
-				while ((_n = util.next_node(_n))) {
-						res.nodes.push(_n);
-				}
-				n = n.parentNode;
-			}
-			// от начальной точки до конечной точки
-			n = sp;
-			while ((n = util.next_node(n)) && n!= ep ) {
-				//			this.rte.log(n)
-				res.nodes.push(n);
-			}
-			// поднимаемся от конечной ноды до конечной точки, результат переворачиваем
-			var tmp = [];
-			n = e;
-			while (n !== ep) {
-				var _n = n;
-				while ((_n = util.prev_node(_n))) {
-					tmp.push(_n);
-				}
-				n = n.parentNode;
-			}
-			if (tmp.length) {
-				res.nodes = res.nodes.concat(tmp.reverse());
-			}
-			//  если конечная нода не пустая и != начальной - добавляем ее
-			if (!isEmptySelected(e, 0, e.nodeType==3 ? res.eo : null)) {
-				res.nodes.push(e);
-			}
-
-			if (blocks) {
-				// добавляем инлайн соседей слева
-				if (this.rte.dom.isInline(s)) {
-					res.nodes = this.rte.dom.toLineStart(s).concat(res.nodes);
-					res.so    = res.nodes[0].nodeType == 1 ? null : 0;
-				}
-				// добавляем инлайн соседей справа
-				if (this.rte.dom.isInline(e)) {
-					res.nodes = res.nodes.concat(this.rte.dom.toLineEnd(e));
-					res.eo    = res.nodes[res.nodes.length-1].nodeType == 1 ? null : res.nodes[res.nodes.length-1].nodeValue.length;
-				}
-			}
-
-			// все радуются! :)
-			return res;
-		}
-
-	};
-
-	Wysiwyg.prototype.w3cRange = function(rte) {
-		var self                     = this;
-		this.rte                     = rte;
-		this.r                       = null;
-		this.collapsed               = true;
-		this.startContainer          = null;
-		this.endContainer            = null;
-		this.startOffset             = 0;
-		this.endOffset               = 0;
-		this.commonAncestorContainer = null;
-
-		this.range = function() {
-			try { 
-				this.r = this.rte.win.document.selection.createRange(); 
-			} catch(e) { 
-				this.r = this.rte.doc.body.createTextRange(); 
-			}
-			return this.r;
-		}
-
-		this.insertNode = function(html) {
-			this.range();
-			self.r.collapse(false)
-			var r = self.r.duplicate();
-			r.pasteHTML(html);
-		}
-
-		this.getBookmark = function() {
-			this.range();
-			if (this.r.item) {
-				var n = this.r.item(0);
-				this.r = this.rte.doc.body.createTextRange();
-				this.r.moveToElementText(n);
-			}
-			return this.r.getBookmark();
-		}
-
-		this.moveToBookmark = function(bm) {
-			this.rte.win.focus();
-			this.range().moveToBookmark(bm);
-			this.r.select();
-		}
-
-		/**
-		 * Обновляет данные о выделенных нодах
-		 *
-		 * @return void
-		 **/
-		this.update = function() {
-
-			function _findPos(start) {
-				var marker = '\uFEFF';
-				var ndx = offset = 0;
-				var r = self.r.duplicate();
-				r.collapse(start);
-				var p = r.parentElement();
-				if (!p || p.nodeName == 'HTML') {
-					return {parent : self.rte.doc.body, ndx : ndx, offset : offset};
-				}
-
-				r.pasteHTML(marker);
-
-				childs = p.childNodes;
-				for (var i=0; i < childs.length; i++) {
-					var n = childs[i];
-					if (i>0 && (n.nodeType!==3 || childs[i-1].nodeType !==3)) {
-						ndx++;
-					}
-					if (n.nodeType !== 3) {
-						offset = 0;
-					} else {
-						var pos = n.nodeValue.indexOf(marker);
-						if (pos !== -1) {
-							offset += pos;
-							break;
-						}
-						offset += n.nodeValue.length;
-					}
-				};
-				r.moveStart('character', -1);
-				r.text = '';
-				return {parent : p, ndx : Math.min(ndx, p.childNodes.length-1), offset : offset};
-			}
-
-			this.range();
-			this.startContainer = this.endContainer = null;
-
-			if (this.r.item) {
-				this.collapsed = false;
-				var i = this.r.item(0);
-				this.setStart(i.parentNode, this.rte.dom.indexOf(i));
-				this.setEnd(i.parentNode, this.startOffset+1);
-			} else {
-				this.collapsed = this.r.boundingWidth == 0;
-				var start = _findPos(true); 
-				var end   = _findPos(false);
-
-				start.parent.normalize();
-				end.parent.normalize();
-				start.ndx = Math.min(start.ndx, start.parent.childNodes.length-1);
-				end.ndx = Math.min(end.ndx, end.parent.childNodes.length-1);
-				if (start.parent.childNodes[start.ndx].nodeType && start.parent.childNodes[start.ndx].nodeType == 1) {
-					this.setStart(start.parent, start.ndx);
-				} else {
-					this.setStart(start.parent.childNodes[start.ndx], start.offset);
-				}
-				if (end.parent.childNodes[end.ndx].nodeType && end.parent.childNodes[end.ndx].nodeType == 1) {
-					this.setEnd(end.parent, end.ndx);
-				} else {
-					this.setEnd(end.parent.childNodes[end.ndx], end.offset);
-				}
-				// this.dump();
-				this.select();
-			}
-			return this;
-		}
-
-		this.isCollapsed = function() {
-			this.range();
-			this.collapsed = this.r.item ? false : this.r.boundingWidth == 0;
-			return this.collapsed;
-		}
-
-		/**
-		 * "Схлопывает" выделение
-		 *
-		 * @param  bool  toStart - схлопывать выделение к началу или к концу
-		 * @return void
-		 **/
-		this.collapse = function(toStart) {
-			this.range();
-			if (this.r.item) {
-				var n = this.r.item(0);
-				this.r = this.rte.doc.body.createTextRange();
-				this.r.moveToElementText(n);
-			}
-			this.r.collapse(toStart);
-			this.r.select();
-			this.collapsed = true;
-		}
-
-		this.getStart = function() {
-			this.range();
-			if (this.r.item) {
-				return this.r.item(0);
-			}
-			var r = this.r.duplicate();
-			r.collapse(true);
-			var s = r.parentElement();
-			return s && s.nodeName == 'BODY' ? s.firstChild : s;
-		}
-
-		this.getEnd = function() {
-			this.range();
-			if (this.r.item) {
-				return this.r.item(0);
-			}
-			var r = this.r.duplicate();
-			r.collapse(false);
-			var e = r.parentElement();
-			return e && e.nodeName == 'BODY' ? e.lastChild : e;
-		}
-
-		/**
-		 * Устанавливает начaло выделения на указаную ноду
-		 *
-		 * @param  Element  node    нода
-		 * @param  Number   offset  отступ от начала ноды
-		 * @return void
-		 **/
-		this.setStart = function(node, offset) {
-			this.startContainer = node;
-			this.startOffset    = offset;
-			if (this.endContainer) {
-				this.commonAncestorContainer = util.deepest_parent_of(this.startContainer, this.endContainer);
-			}
-		}
-
-		/**
-		 * Устанавливает конец выделения на указаную ноду
-		 *
-		 * @param  Element  node    нода
-		 * @param  Number   offset  отступ от конца ноды
-		 * @return void
-		 **/
-		this.setEnd = function(node, offset) {
-			this.endContainer = node;
-			this.endOffset    = offset;
-			if (this.startContainer) {
-				this.commonAncestorContainer = util.deepest_parent_of(this.startContainer, this.endContainer);
-			}
-		}
-
-		/**
-		 * Устанавливает начaло выделения перед указаной нодой
-		 *
-		 * @param  Element  node    нода
-		 * @return void
-		 **/
-		this.setStartBefore = function(n) {
-			if (n.parentNode) {
-				this.setStart(n.parentNode, util.index_of_child(n));
-			}
-		}
-
-		/**
-		 * Устанавливает начaло выделения после указаной ноды
-		 *
-		 * @param  Element  node    нода
-		 * @return void
-		 **/
-		this.setStartAfter = function(n) {
-			if (n.parentNode) {
-				this.setStart(n.parentNode, this.rte.dom.indexOf(n)+1);
-			}
-		}
-
-		/**
-		 * Устанавливает конец выделения перед указаной нодой
-		 *
-		 * @param  Element  node    нода
-		 * @return void
-		 **/
-		this.setEndBefore = function(n) {
-			if (n.parentNode) {
-				this.setEnd(n.parentNode, this.rte.dom.indexOf(n));
-			}
-		}
-
-		/**
-		 * Устанавливает конец выделения после указаной ноды
-		 *
-		 * @param  Element  node    нода
-		 * @return void
-		 **/
-		this.setEndAfter = function(n) {
-			if (n.parentNode) {
-				this.setEnd(n.parentNode, util.index_of_child(n)+1);
-			}
-		}
-
-		/**
-		 * Устанавливает новое выделение после изменений
-		 *
-		 * @return void
-		 **/
-		this.select = function() {
-			function getPos(n, o) {
-				if (n.nodeType != 3) {
-					return -1;
-				}
-				var c   ='\uFEFF';
-				var val = n.nodeValue;
-				var r   = self.rte.doc.body.createTextRange();
-				n.nodeValue = val.substring(0, o) + c + val.substring(o);
-				r.moveToElementText(n.parentNode);
-				r.findText(c);
-				var p = Math.abs(r.moveStart('character', -0xFFFFF));
-				n.nodeValue = val;
-				return p;
-			};
-
-			this.r = this.rte.doc.body.createTextRange(); 
-			var so = this.startOffset;
-			var eo = this.endOffset;
-			var s = this.startContainer.nodeType == 1 
-				? this.startContainer.childNodes[Math.min(so, this.startContainer.childNodes.length - 1)]
-				: this.startContainer;
-			var e = this.endContainer.nodeType == 1 
-				? this.endContainer.childNodes[Math.min(so == eo ? eo : eo - 1, this.endContainer.childNodes.length - 1)]
-				: this.endContainer;
-
-			if (this.collapsed) {
-				if (s.nodeType == 3) {
-					var p = getPos(s, so);
-					this.r.move('character', p);
-				} else {
-					this.r.moveToElementText(s);
-					this.r.collapse(true);
-				}
-			} else {
-				var r  = this.rte.doc.body.createTextRange(); 
-				var sp = getPos(s, so);
-				var ep = getPos(e, eo);
-				if (s.nodeType == 3) {
-					this.r.move('character', sp);
-				} else {
-					this.r.moveToElementText(s);
-				}
-				if (e.nodeType == 3) {
-					r.move('character', ep);
-				} else {
-					r.moveToElementText(e);
-				}
-				this.r.setEndPoint('EndToEnd', r);
-			}
-
-			try {
-				this.r.select();
-			} catch(e) {
-
-			}
-			if (r) {
-				r = null;
-			}
-		}
-
-		this.dump = function() {
-			this.rte.log('collapsed: '+this.collapsed);
-			//this.rte.log('commonAncestorContainer: '+this.commonAncestorContainer.nodeName||'#text')
-			this.rte.log('startContainer: '+(this.startContainer ? this.startContainer.nodeName : 'non'));
-			this.rte.log('startOffset: '+this.startOffset);
-			this.rte.log('endContainer: '+(this.endContainer ? this.endContainer.nodeName : 'none'));
-			this.rte.log('endOffset: '+this.endOffset);
-		}
-
-	};
-
 })(jQuery);
