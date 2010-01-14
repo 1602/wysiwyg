@@ -274,82 +274,53 @@
 		
 		this.wrap_with = function (tag_name) {
 			this.create_range();
+			alert(this.r.htmlText);
 			this.r.pasteHTML('<' + tag_name + '>' + this.r.htmlText + '</' + tag_name + '>');
 			this.r.select();
 			return this.r.parentElement();
 		};
 		
-		this.select = function() {
-			function getPos(n, o) {
-				if (n.nodeType != 3) {
-					return -1;
-				}
-				var c   ='\uFEFF';
-				var val = n.nodeValue;
-				var r   = self.rte.doc.body.createTextRange();
-				n.nodeValue = val.substring(0, o) + c + val.substring(o);
-				r.moveToElementText(n.parentNode);
-				r.findText(c);
-				var p = Math.abs(r.moveStart('character', -0xFFFFF));
-				n.nodeValue = val;
-				return p;
-			};
-			
-			this.r = this.rte.doc.body.createTextRange(); 
-			var so = this.startOffset;
-			var eo = this.endOffset;
-			var s = this.startContainer.nodeType == 1 
-				? this.startContainer.childNodes[Math.min(so, this.startContainer.childNodes.length - 1)]
-				: this.startContainer;
-			var e = this.endContainer.nodeType == 1 
-				? this.endContainer.childNodes[Math.min(so == eo ? eo : eo - 1, this.endContainer.childNodes.length - 1)]
-				: this.endContainer;
-	
-			if (this.collapsed) {
-				if (s.nodeType == 3) {
-					var p = getPos(s, so);
-					this.r.move('character', p);
-				} else {
-					this.r.moveToElementText(s);
-					this.r.collapse(true);
-				}
-			} else {
-				var r  = this.rte.doc.body.createTextRange(); 
-				var sp = getPos(s, so);
-				var ep = getPos(e, eo);
-				if (s.nodeType == 3) {
-					this.r.move('character', sp);
-				} else {
-					this.r.moveToElementText(s);
-				}
-				if (e.nodeType == 3) {
-					r.move('character', ep);
-				} else {
-					r.moveToElementText(e);
-				}
-				this.r.setEndPoint('EndToEnd', r);
-			}
-			
-			try {
-				this.r.select();
-			} catch(e) {
-				
-			}
-			if (r) {
-				r = null;
-			}
-		};
-		
 	};
 	
 	var normal_selection = function (win) {
-		
+		var self = this;
 		this.win = win;
 		this.doc = win.document;
 		
+		function get_selection() {
+			return self.win.getSelection ? self.win.getSelection() : self.doc.selection;
+		}
+		
+		function get_range() {
+			var sel = get_selection();
+			return sel.rangeCount > 0 ? sel.getRangeAt(0) : self.doc.createRange();
+		}
+		
 		this.get_start = function () {
-			return this.doc.createRange().startContainer;
+			return get_range().startContainer;
 		};
+		
+		this.insert_node = function (node) {
+			var r = get_range();
+			r.insertNode(node);
+			r.selectNodeContents(node);
+			/*
+			var s = get_selection();
+			s.removeAllRanges();
+			s.addRange(r);
+			*/
+		}
+		
+		this.wrap_with = function (tag_name) {
+			var r = get_range();
+			var new_parent = this.doc.createElement(tag_name);
+			r.surroundContents(new_parent);
+			return new_parent;
+		}
+		
+		this.collapsed = function () {
+			return get_range().collapsed;
+		}
 	};
 	
 	window.Wysiwyg = function(textarea) {
