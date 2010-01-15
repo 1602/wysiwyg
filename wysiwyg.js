@@ -376,7 +376,13 @@
 		};
 	};
 
-	window.Wysiwyg = function(textarea) {
+	window.Wysiwyg = function(textarea, options) {
+		options = options || {};
+		options.min_width = options.min_width || 674;
+		options.max_width = options.max_width || 800;
+		options.min_height = options.min_height || 315;
+		options.max_height = options.max_height || 600;
+
 		var self = this;
 		this.workspace = util.create_top('div', 'secure_wysiwyg_editor');
 
@@ -397,12 +403,18 @@
 			ip.tw = self.tp.offsetWidth;
 			document.onmousemove = function (e) {
 				e = e || window.event;
-				editor.style.height = ip.h + e.clientY - ip.y + 'px';
-				editor.style.width = ip.w + e.clientX - ip.x + 'px';
-				self.iframe.style.height = ip.eh + e.clientY - ip.y + 'px';
-				self.iframe.style.width = ip.ew + e.clientX - ip.x + 'px';
-				self.tp.style.height = ip.th + e.clientY - ip.y + 'px';
-				self.tp.style.width = ip.tw + e.clientX - ip.x + 'px';
+				var h = ip.h + e.clientY - ip.y;
+				var w = ip.w + e.clientX - ip.x;
+				if (options.min_width <= w && w <= options.max_width) {
+					editor.style.width = w + 'px';
+					self.iframe.style.width = ip.ew + e.clientX - ip.x + 'px';
+					self.tp.style.width = ip.tw + e.clientX - ip.x + 'px';
+				}
+				if (options.min_height <= h && h <= options.max_height) {
+					editor.style.height = h + 'px';
+					self.iframe.style.height = ip.eh + e.clientY - ip.y + 'px';
+					self.tp.style.height = ip.th + e.clientY - ip.y + 'px';
+				}
 			};
 			document.onmouseup = function () {
 				document.onmousemove = null;
@@ -410,7 +422,7 @@
 			};
 			return false;
 		};
-		
+
 		// top controls (with logo)
 		this.controls = util.create_top('div', 'btns-top', editor);
 		util.create_top('div', 'editor-logo', this.controls);
