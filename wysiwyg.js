@@ -174,9 +174,11 @@
 			return w;
 		},
 		remove_class: function(el, class_name) {
-			if (!el || !el.getAttribute) return;
-			var classes = el.getAttribute('class');
-			if (!classes) return;
+			if (!el || !el.className) return;
+			var classes = el.className;
+			if (!classes) {
+				return;
+			}
 			classes = classes.toLowerCase().replace(class_name, '').replace(/\s+/, ' ');
 			el.className = classes;
 		},
@@ -328,7 +330,7 @@
 
 		function get_range() {
 			var sel = get_selection();
-			return sel.rangeCount > 0 ? sel.getRangeAt(0) : self.doc.createRange();
+			return sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : self.doc.createRange();
 		}
 
 		this.get_start = function () {
@@ -537,11 +539,11 @@
 				var b = this.buttons[i], bel = b.el.parentNode;
 				if (source_mode) {
 					if (b.name === 'show_source') {
-						util.remove_class(b.el, 'disabled');
+						util.remove_class(bel, 'disabled');
 					} else {
-						util.add_class(b.el, 'disabled');
+						util.add_class(bel, 'disabled');
 					}
-					util.remove_class(b.el, 'click');
+					util.remove_class(bel, 'click');
 					continue;
 				}
 				switch (b.name) {
@@ -551,6 +553,7 @@
 					} else {
 						util.remove_class(bel, 'click');
 					}
+					util.remove_class(bel, 'disabled');
 					break;
 				case 'insertimage':
 					if (node && node.nodeName === 'IMG') {
@@ -676,20 +679,6 @@
 			}
 			 */
 		],
-		highlight_for_node: function (node) {
-			var node_names = [], name;
-			if (!node) {
-				return;
-			}
-			do {
-				name = node.nodeName.toLowerCase();
-				node_names.push(name);
-				prev_node = node;
-			} while (name !== 'body' && (node = node.parentNode));
-			if (node && node.is_wysiwyg) {
-				this.set_status(node_names.reverse().join(' > '));
-			}
-		},
 		init_controls: function () {
 			var w = this;
 			w.buttons = [];
@@ -729,7 +718,7 @@
 
 			// show source code
 			commands.push({
-				image: 'page_code',
+				image: 'bb-bold',
 				command: 'show_source',
 				action: function () {
 					w.switch_design_mode();
@@ -987,7 +976,7 @@
 
 				button.onclick = (function(cmd, b, editor) {
 					return function (e) {
-						if ($(b).hasClass('disabled')) {
+						if (util.has_class(b.parentNode, 'disabled')) {
 							return false;
 						}
 						if (typeof cmd.action === 'function') {
