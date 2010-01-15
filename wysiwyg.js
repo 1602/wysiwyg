@@ -1069,8 +1069,8 @@
 			});
 		},
 		show_image_dialog: function (callback, properties) {
-			var div = document.createElement('div');
-			div.innerHTML = '<form>' +
+			var image_div = document.createElement('div');
+			image_div.innerHTML = '<form>' +
 				[
 					'<label>Адрес:</label>',
 					'<input type="text" name="src" class="modal-text" />',
@@ -1086,7 +1086,7 @@
 				].join('<br/>') +
 			'</form>';
 			if (properties) {
-				var f = div.firstChild;
+				var f = image_div.firstChild;
 				f.src.value = properties.src;
 				f.alt.value = properties.alt;
 				f.css.value = properties.css;
@@ -1102,8 +1102,12 @@
 					f.align.selectedIndex = 2;
 				}
 			}
-			this.show_modal_dialog({caption: 'Вставка изображения'}, div, function (div) {
-				var f = div.firstChild;
+			var div = util.create_top('div');
+			div.innerHTML = '<ul class="tabs" id="tabs"><li class="active"><a href="#image">Image</a></li><li><a href="#files">Files</a></li></ul><div id="image"></div><div id="files"></div>';
+			div.getElementById('image').appendChild(image_div);
+			//div.getElementById('files').appendChild(files_div);
+			this.show_modal_dialog({caption: 'Вставка изображения'}, div, function () {
+				var f = image_div.firstChild;
 				callback({
 					src: f.src.value,
 					align: f.align.options[f.align.selectedIndex].value,
