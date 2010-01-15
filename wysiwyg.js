@@ -386,12 +386,21 @@
 			e = e || window.event;
 			var ip = {};
 			ip.y = e.clientY;
+			ip.x = e.clientX;
 			ip.h = editor.offsetHeight;
+			ip.w = editor.offsetWidth;
 			ip.eh = self.iframe.offsetHeight;
+			ip.ew = self.iframe.offsetWidth;
+			ip.th = self.tp.offsetHeight;
+			ip.tw = self.tp.offsetWidth;
 			document.onmousemove = function (e) {
 				e = e || window.event;
 				editor.style.height = ip.h + e.clientY - ip.y + 'px';
+				editor.style.width = ip.w + e.clientX - ip.x + 'px';
 				self.iframe.style.height = ip.eh + e.clientY - ip.y + 'px';
+				self.iframe.style.width = ip.ew + e.clientX - ip.x + 'px';
+				self.tp.style.height = ip.th + e.clientY - ip.y + 'px';
+				self.tp.style.width = ip.tw + e.clientX - ip.x + 'px';
 			};
 			document.onmouseup = function () {
 				document.onmousemove = null;
@@ -423,6 +432,7 @@
 
 		// textplace
 		var textplace = util.create_top('div', 'textplace', editor);
+		this.tp = textplace;
 		util.create_top('div', 'clear', editor);
 
 		// editor area
