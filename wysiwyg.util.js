@@ -1,6 +1,7 @@
 // 15-17 x 21-24
 
 function Util(wysiwyg) {
+	var self = this;
 	this.wysiwyg = wysiwyg;
 	var user_agent = navigator.userAgent.toLowerCase();
 	this.browser = {
@@ -10,11 +11,47 @@ function Util(wysiwyg) {
 		msie: /msie/.test(user_agent) && !/opera/.test(user_agent),
 		mozilla: /mozilla/.test(user_agent) && !/(compatible|webkit)/.test(user_agent)
 	};
+	
+	function create_element(nodeName, class_name, parent_node) {
+		var node = this.createElement(nodeName);
+		if (class_name) {
+			self.add_class(node, class_name);
+		}
+		if (parent_node) {
+			parent_node.appendChild(node);
+		}
+		return node;
+	}
+	
+	this.create = function () {
+		return create_element.apply(wysiwyg.doc, arguments);
+	};
+	
+	this.create_top = function (node_name, class_name, parent_node) {
+		return create_element.apply(document, arguments);
+	};
 }
 
 Util.prototype = {
-	trim: function(text) {
+	trim: function (text) {
 		return (text || "").replace( /^\s+|\s+$/g, "" );
+	},
+	each: function (collection, callback) {
+		if (this.is_array(collection)) {
+			for (var i = 0, len = collection.length; i < len; i++) {
+				if (callback(i, collection[i]) === false) {
+					break;
+				}
+			}
+		} else {
+			for (var i in collection) {
+				if (collection.hasOwnProperty(i)) {
+					if (callback(i, collection[i]) === false) {
+						break;
+					}
+				}
+			}
+		}
 	},
 	get_parents: function (node) {
 		var parents = [];
@@ -122,26 +159,6 @@ Util.prototype = {
 		}
 		return true;
 	},
-	create: function (nodeName, class_name, parent_node) { // todo: uncopypaste
-		var node = this.wysiwyg.doc.createElement(nodeName);
-		if (class_name) {
-			this.add_class(node, class_name);
-		}
-		if (parent_node) {
-			parent_node.appendChild(node);
-		}
-		return node;
-	},
-	create_top: function (node_name, class_name, parent_node) { // todo: uncopypaste
-		var node = document.createElement(node_name);
-		if (class_name) {
-			this.add_class(node, class_name);
-		}
-		if (parent_node) {
-			parent_node.appendChild(node);
-		}
-		return node;
-	},
 	wrap: function (n, w) {
 		n = n.length ? n : [n];
 		w = w.nodeName ? w : this.create(w);
@@ -188,7 +205,7 @@ Util.prototype = {
 	},
 	get_parent_by_class_name: function (node, class_name) {
 		while (node) {
-			if (node.nodeName && util.has_class(node, class_name)) {
+			if (node.nodeName && this.has_class(node, class_name)) {
 				return node;
 			}
 			node = node.parentNode;
@@ -353,5 +370,18 @@ Util.prototype.selection = function () {
 	
 	var S = this.browser.msie ? ie_selection : normal_selection;
 	
-	return new S(this.wysiwyg.win);
+	S.prototype.filter = function (selector) {
+		var s = this.get_start();
+		switch (selector.charAt(0)) {
+		case '.':
+			return this.$.get_parent_by_class_name(s, selector.substr(1));
+			break;
+		default:
+			return this.$.get_parent_by_tag_name(s, selector);
+		}
+	}
+	
+	var s = new S(this.wysiwyg.win);
+	s.$ = this;
+	return s;
 };
