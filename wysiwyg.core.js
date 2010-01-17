@@ -161,24 +161,28 @@ function Wysiwyg(textarea, options) {
 Wysiwyg.prototype = {
 	plugins: {},
 	update_controls: function () {
-		var self = this;
-		var node = this.selection.get_start();
-		var cur = node;
-		var parents = [];
-		var parent_classes = [];
-		var selection_collapsed = this.selection.collapsed();
+		var self = this,
+			node = this.selection.get_start(),
+			cur = node,
+			regex_tagname = /^\<(.*?)\>$/,
+			regex_classname = /^\.(.*)$/;
+		var state = {
+			parents: [],
+			parent_classes: [],
+			selection_collapsed: this.selection.collapsed()
+		}
 		while (cur && cur.nodeName) {
-			parents.push(cur.nodeName);
+			state.parents.push(cur.nodeName);
 			var cls = cur.getAttribute && cur.getAttribute('class');
 			if (cls) {
-				parent_classes.push(cls);
+				state.parent_classes.push(cls);
 			}
 			cur = cur.parentNode;
 		}
 
 		var source_mode = this.mode === 'text';
-		for (var i in this.buttons) {
-			var b = this.buttons[i], bel = b.el.parentNode;
+		for (var i in this.initialized_plugins) {
+			var p = this.initialized_plugins[i], bel = p.el.parentNode;
 			if (source_mode) {
 				if (b.name === 'show_source') {
 					self.$.remove_class(bel, 'disabled');
@@ -187,6 +191,21 @@ Wysiwyg.prototype = {
 				}
 				self.$.remove_class(bel, 'click');
 				continue;
+			}
+			if (typeof p.update === 'function') {
+				p.update(bel, state);
+			} else if (typeof p.update === 'string') {
+				self.$.remove_class(bel, 'disabled');
+				var matched_tagname = false, matched_classname = false;
+				if ((matched_tagname = p.update.match(regex_tagname)) &&
+					self.$.in_array(matched_tagname[1], state.parents) !== -1 ||
+					(matched_classname = p.update.match(regex_classname)) &&
+					self.$.in_array(matched_classname[1], state.parent_classes) !== -1
+				) {
+					self.$.add_class(bel, 'click');
+				} else {
+					self.$.remove_class(bel, 'click');
+				}
 			}
 		}
 	},
@@ -212,6 +231,7 @@ Wysiwyg.prototype = {
 			var image = w.$.create_top('img', false, button);
 			image.src = 'images/' + p.image + '.gif';
 			button.href = '#';
+			p.el = button;
 
 			button.onclick = function (e) {
 				if (w.$.has_class(button_holder, 'disabled')) {

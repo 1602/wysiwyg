@@ -205,13 +205,13 @@ Wysiwyg.prototype.plugins.link = function (w) {
 		div.innerHTML = '<form><div class="modal-type">Адрес ссылки:</div>' +
 			'<input type="text" name="url" class="modal-text" value="' + (linkNode ? linkNode.getAttribute('href') : '') + '" />' +
 			'</form>';
-		this.show_modal_dialog({caption: 'Вставка ссылки'}, div, function (div) {
+		w.show_modal_dialog({caption: 'Вставка ссылки'}, div, function (div) {
 			callback(div.firstChild.url.value);
 		});
 	}
 	this.action = function () {
 		var linkNode = w.selection.filter('a');
-		w.show_linkcreator(linkNode, function (link) {
+		show_linkcreator(linkNode, function (link) {
 			//w.doc.execCommand('createlink', false, link);
 			if (linkNode) {
 				linkNode.setAttribute('href', link);
@@ -301,13 +301,13 @@ Wysiwyg.prototype.plugins.spoiler = function (w) {
 Wysiwyg.prototype.plugins.hide = function (w) {
 	this.image = 'bb-hide';
 	this.command = 'hide';
-	
+	this.update = '.bb-hide';
 	function show_hidecreator(hideNode, callback) {
 		var div = document.createElement('div');
 		div.innerHTML = '<form><div class="modal-type">Количество сообщений:</div>' +
 		'<input name="count" class="modal-text" value="' + (hideNode ? hideNode.getAttribute('value') : '') + '" />' +
 		'</form>';
-		this.show_modal_dialog({caption: 'Вставка скрытого контента'}, div, function (div) {
+		w.show_modal_dialog({caption: 'Вставка скрытого контента'}, div, function (div) {
 			var v = parseInt(div.firstChild.count.value, 10);
 			if (isNaN(v)) {
 				div.firstChild.count.focus();
@@ -392,6 +392,7 @@ Wysiwyg.prototype.plugins.media = function (w) {
 			callback(div.firstChild.code.value);
 		});
 	}
+	this.update = '.bb-media';
 	this.action = function () {
 		var media = w.selection.filter('.bb-media');
 		if (media) {
