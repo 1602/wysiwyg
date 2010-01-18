@@ -231,7 +231,13 @@ Util.prototype.selection = function () {
 		this.doc = win.document;
 
 		this.create_range = function() {
-			this.r = this.doc.selection.createRange();
+			this.win.focus();
+			try { 
+				this.r = this.doc.selection.createRange(); 
+			} catch(e) { 
+				this.r = this.doc.body.createTextRange(); 
+			}
+			return this.r;
 		};
 
 		this.get_start = function () {
@@ -247,7 +253,6 @@ Util.prototype.selection = function () {
 
 		this.insert_node = function (node) {
 			this.create_range();
-			this.r.collapse(false);
 			var r = this.r.duplicate();
 			var html;
 			if (node.nodeType == 3) {
@@ -303,7 +308,7 @@ Util.prototype.selection = function () {
 
 		this.restore_selection = function() {
 			if (this.bookmark) {
-				this.win.focus();
+				this.create_range();
 				this.r.moveToBookmark(this.bookmark);
 				this.r.select();
 			}

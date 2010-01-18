@@ -39,6 +39,20 @@ for (var i in std_commands) {
 	}
 }
 
+Wysiwyg.prototype.plugins.fontsize = function () {
+	this.command = 'setfontsize';
+	this.className = 'selectplace';
+	this.html = '<span class="select"></span>\
+		<select class="styled">\
+			<option selected="selected">11 pixel\'s</option>\
+			<option>12 pixel\'s</option>\
+			<option>14 pixel\'s</option>\
+			<option>16 pixel\'s</option>\
+			<option>18 pixel\'s</option>\
+			<option>20 pixel\'s</option>\
+		</select>';
+};
+
 Wysiwyg.prototype.plugins.setcolor = function (w) {
 	this.image = 'bb-color';
 	this.command = 'setcolor';
@@ -55,9 +69,12 @@ Wysiwyg.prototype.plugins.setcolor = function (w) {
 					html += '<li style="background-color:#' + c + '">&nbsp;</li>';
 				}
 			}
-			html += '</ul><ul class="colorpicker">';
+			html += '</ul>';
+			if (r < 5) {
+				html += '<ul class="colorpicker">';
+			}
 		}
-		html += '</ul>';
+		html += '</ul><div class="clear" style="font-weight: 700; height: 32px;">Цвет не выбран</div>';
 		div.innerHTML = html;
 		var selected_color;
 		div.onclick = function (e) {
@@ -65,6 +82,10 @@ Wysiwyg.prototype.plugins.setcolor = function (w) {
 			var t = e.target || e.srcElement;
 			if (t && t.nodeName === 'LI') {
 				selected_color = t.style.backgroundColor;
+				/* div.lastChild.innerHTML = 'Выбран цвет <div style="display:inline-block; vertical-align: middle; width:20px; height: 20px; border: 1px solid #000; margin:5px; background-color: ' + selected_color + '"></div>'; */
+				div.style.color = t.style.backgroundColor;
+				div.lastChild.innerHTML = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+				
 			}
 		};
 		w.show_modal_dialog({caption: 'Выбор цвета'}, div, function (div) {
@@ -135,7 +156,7 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 		}
 		var div = w.$.create_top('div');
 		div.innerHTML = '<ul class="tabs" id="tabs"><li class="active"><a href="#image">Image</a></li><li><a href="#files">Files</a></li></ul><div id="image"></div><div id="files"></div>';
-		div.getElementById('image').appendChild(image_div);
+		//div.getElementById('image').appendChild(image_div);
 		//div.getElementById('files').appendChild(files_div);
 		this.show_modal_dialog({caption: 'Вставка изображения'}, div, function () {
 			var f = image_div.firstChild;
@@ -375,7 +396,60 @@ Wysiwyg.prototype.plugins.smile = function (w) {
 	this.image = 'bb-smile';
 	this.command = 'smile';
 	this.action = function () {
-		alert('Not implemented yet. Sorry.');
+		var div = w.$.create_top('div');
+		var html = '';
+		var selected_image;
+		w.$.each([
+			'icon_arrow.gif',
+			'icon_biggrin.gif',
+			'icon_confused.gif',
+			'icon_cool.gif',
+			'icon_cry.gif',
+			'icon_doubt.gif',
+			'icon_doubt2.gif',
+			'icon_eek.gif',
+			'icon_evil.gif',
+			'icon_exclaim.gif',
+			'icon_frown.gif',
+			'icon_fun.gif',
+			'icon_idea.gif',
+			'icon_kaddi.gif',
+			'icon_lol.gif',
+			'icon_mrgreen.gif',
+			'icon_neutral.gif',
+			'icon_question.gif',
+			'icon_razz.gif',
+			'icon_redface.gif',
+			'icon_rolleyes.gif',
+			'icon_sad.gif',
+			'icon_silenced.gif',
+			'icon_smile.gif',
+			'icon_smile2.gif',
+			'icon_surprised.gif',
+			'icon_twisted.gif',
+			'icon_wink.gif'
+		], function(i, image) {
+			html += '<img onmouseover="this.style.borderColor = \'#ddd\'" onmouseout="this.style.borderColor = \'#fff\'" src="images/smileys/' + image + '" style="margin:3px;padding: 3px; border: 1px solid #fff; cursor: pointer;" />';
+			if (i % 7 === 6) {
+				html += '<br />';
+			}
+		});
+		div.innerHTML = html;
+		var d = w.show_modal_dialog({caption: 'Вставка смайлика', width: 226}, div, function (div) {
+			if (selected_image) {
+				var node = w.$.create('img');
+				node.src = selected_image;
+				w.selection.insert_node(node);
+			}
+		});
+		div.onclick = function (e) {
+			e = e || window.event;
+			var t = e.target || e.srcElement;
+			if (t && t.nodeName === 'IMG') {
+				selected_image = t.src;
+				d.ok.onclick();
+			}
+		}
 	};
 	this.panel = 'btns_small';
 };

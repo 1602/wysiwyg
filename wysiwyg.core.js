@@ -90,7 +90,7 @@ function Wysiwyg(textarea, options) {
 	// visual and text editors
 	this.source = $.create_top('textarea', 'textarea', editor_keeper);
 	this.iframe = $.create_top('iframe', 'textarea', editor_keeper);
-	this.iframe.setAttribute('frameborder', 0);
+	this.iframe.setAttribute('frameBorder', 0);
 	this.is_msie = $.browser.msie;
 
 	textarea.parentNode.insertBefore(this.workspace, textarea.nextSibling);
@@ -156,6 +156,8 @@ function Wysiwyg(textarea, options) {
 	});
 
 	this.init_controls();
+	this.win.focus();
+	this.update_controls();
 };
 
 Wysiwyg.prototype = {
@@ -182,9 +184,10 @@ Wysiwyg.prototype = {
 
 		var source_mode = this.mode === 'text';
 		for (var i in this.initialized_plugins) {
-			var p = this.initialized_plugins[i], bel = p.el.parentNode;
+			var p = this.initialized_plugins[i], bel = p.el && p.el.parentNode;
+			if (!bel) continue;
 			if (source_mode) {
-				if (b.name === 'show_source') {
+				if (p.command === 'show_source') {
 					self.$.remove_class(bel, 'disabled');
 				} else {
 					self.$.add_class(bel, 'disabled');
@@ -226,36 +229,40 @@ Wysiwyg.prototype = {
 			
 			var p = new w.plugins[plugin](w);
 			
-			var button_holder = w.$.create_top('li', false, block);
-			var button = w.$.create_top('a', false, button_holder);
-			var image = w.$.create_top('img', false, button);
-			image.src = 'images/' + p.image + '.gif';
-			button.href = '#';
-			p.el = button;
-
-			button.onclick = function (e) {
-				if (w.$.has_class(button_holder, 'disabled')) {
+			var button_holder = w.$.create_top('li', p.className || false, block);
+			if (p.html) {
+				button_holder.innerHTML = p.html;
+			} else {
+				var button = w.$.create_top('a', false, button_holder);
+				var image = w.$.create_top('img', false, button);
+				image.src = 'images/' + p.image + '.gif';
+				button.href = '#';
+				p.el = button;
+	
+				button.onclick = function (e) {
+					if (w.$.has_class(button_holder, 'disabled')) {
+						return false;
+					}
+					if (typeof p.action === 'function') {
+						p.action();
+						w.update_controls();
+					} else {
+						w.win.focus();
+						w.doc.execCommand(p.action, false, false);
+						w.update_controls();
+						w.win.focus();
+					}
+					
 					return false;
-				}
-				if (typeof p.action === 'function') {
-					p.action();
-					w.update_controls();
-				} else {
-					//!!!!!!!!!!!!!!!!!!!!!!
-					w.doc.execCommand(p.action, false, false);
-					w.update_controls();
-					w.win.focus();
-				}
-				
-				return false;
-			};
+				};
+			}
 			w.initialized_plugins.push(p);
 		}
 		
 		w.$.each([
 			{
 				block: w.$.create_top('ul', false, w.controls),
-				buttons: ['bold', '|', 'italic', '|', 'underline', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'setcolor', '|', 'mode_switcher']
+				buttons: ['bold', '|', 'italic', '|', 'underline', '|', 'fontsize', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'setcolor', '|', 'mode_switcher']
 			},
 			{
 				block: w.$.create_top('ul', false, w.btns_big),
@@ -295,14 +302,22 @@ Wysiwyg.prototype = {
 	},
 	show_modal_dialog: function(options, contents_div, callback) {
 		var self = this;
-		var self = this;
+		var $ = this.$;
 		self.selection.save_selection && self.selection.save_selection();
 		var overlay = document.createElement('div');
 		overlay.id = 'overlay';
+		
 		document.body.appendChild(overlay);
 
 		var dialog_wrapper = document.createElement('div');
 		self.$.add_class(dialog_wrapper, 'modalwindow');
+		dialog_wrapper.style.zIndex = 1002;
+		if (options.width) {
+			dialog_wrapper.style.width = options.width + 'px';
+		}
+		if (options.height) {
+			dialog_wrapper.style.height = options.height + 'px';
+		}
 		overlay.appendChild(dialog_wrapper);
 
 		// round corners
@@ -314,12 +329,12 @@ Wysiwyg.prototype = {
 		}
 
 		var dialog = document.createElement('div');
-		self.$.add_class(dialog, 'modalmain');
+		$.add_class(dialog, 'modalmain');
 		dialog_wrapper.appendChild(dialog);
 
 		var header = document.createElement('div');
 		header.innerHTML = options.caption;
-		self.$.add_class(header, 'modaltitle');
+		$.add_class(header, 'modaltitle');
 		dialog.appendChild(header);
 
 		// make header draggable
@@ -350,18 +365,23 @@ Wysiwyg.prototype = {
 		}
 
 		var descr_div = document.createElement('div');
-		self.$.add_class(descr_div, 'modaldescr');
+		$.add_class(descr_div, 'modaldescr');
 
 		dialog.appendChild(descr_div);
 		descr_div.appendChild(contents_div);
 
 		var footer = document.createElement('div');
-		self.$.add_class(footer, 'modalclose');
+		$.add_class(footer, 'modalclose');
 		dialog.appendChild(footer);
 
-		var btn_ok = document.createElement('button');
+		var btn_cancel = $.create_top('button');
+		btn_cancel.innerHTML = 'Cancel';
+		btn_cancel.onclick = function () {
+			overlay.parentNode.removeChild(overlay);
+		}
+		
+		var btn_ok = $.create_top('button');
 		btn_ok.innerHTML = 'OK';
-		footer.appendChild(btn_ok);
 		btn_ok.onclick = function () {
 			self.selection.restore_selection && self.selection.restore_selection();
 			var r = callback(contents_div);
@@ -371,13 +391,14 @@ Wysiwyg.prototype = {
 			overlay.parentNode.removeChild(overlay);
 		}
 
-		var btn_cancel = document.createElement('button');
-		btn_cancel.innerHTML = 'Cancel';
-		btn_cancel.onclick = function () {
-			overlay.parentNode.removeChild(overlay);
-		}
+		footer.appendChild(btn_ok);
 		footer.appendChild(btn_cancel);
 
+		dialog_wrapper.style.left = Math.round((overlay.offsetWidth - dialog_wrapper.offsetWidth) / 2) + 'px';
+		dialog_wrapper.style.top = Math.round((overlay.offsetHeight - dialog_wrapper.offsetHeight) / 2) + 'px';
+
 		overlay.style.visibility = 'visible';
+		
+		return {ok: btn_ok, cancel: btn_cancel};
 	}
 };

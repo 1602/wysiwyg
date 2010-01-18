@@ -10,8 +10,19 @@
 <script type="text/javascript" src="wysiwyg.util.js"></script>
 <script type="text/javascript" src="wysiwyg.core.js"></script>
 <script type="text/javascript" src="wysiwyg.plugins.js"></script>
+<script type="text/javascript" src="form.js"></script>
+
+<script>
+window.onload = function () {
+	try{
+	wysiwyg = new Wysiwyg(document.getElementById('text'));
+	}catch(e){console.log(e);}
+	Custom.init();
+}
+</script>
+
 </head>
-<body onload="wysiwyg = new Wysiwyg(document.getElementById('text'));">
+<body>
 <form action="">
 <textarea id="text" cols="80" rows="30">
 <p>
