@@ -39,18 +39,38 @@ for (var i in std_commands) {
 	}
 }
 
-Wysiwyg.prototype.plugins.fontsize = function () {
+Wysiwyg.prototype.plugins.fontsize = function (w) {
+	var self = this;
 	this.command = 'setfontsize';
 	this.className = 'selectplace';
 	this.html = '<span class="select"></span>\
 		<select class="styled">\
-			<option selected="selected">11 pixel\'s</option>\
-			<option>12 pixel\'s</option>\
-			<option>14 pixel\'s</option>\
-			<option>16 pixel\'s</option>\
-			<option>18 pixel\'s</option>\
-			<option>20 pixel\'s</option>\
+			<option value="11px" selected="selected">11 pixel\'s</option>\
+			<option value="12px">12 pixel\'s</option>\
+			<option value="14px">14 pixel\'s</option>\
+			<option value="16px">16 pixel\'s</option>\
+			<option value="18px">18 pixel\'s</option>\
+			<option value="20px">20 pixel\'s</option>\
 		</select>';
+	this.action = function (font_size) {
+		if (w.selection.collapsed()) {
+			var span = w.$.create('span', 'bb-font-size');
+			span.style.fontSize = font_size;
+			w.selection.insert_node(span);
+			w.win.focus();
+		} else {
+			w.selection.wrap_with('span', {
+				'style': 'font-size:' + font_size,
+				'class': 'bb-font-size'
+			});
+		}
+	};
+	this.init = function (element_holder) {
+		self.el = element_holder.lastChild;
+		w.$.add_event(self.el, 'change', function () {
+			self.action(self.el.options[self.el.selectedIndex].value);
+		});
+	};
 };
 
 Wysiwyg.prototype.plugins.setcolor = function (w) {
@@ -117,11 +137,12 @@ Wysiwyg.prototype.plugins.mode_switcher = function (w) {
 };
 
 Wysiwyg.prototype.plugins.image_and_file = function (w) {
+	var self = this;
 	this.image = 'bb-file';
 	this.command = 'insertimage';
 	
 	function show_image_dialog(callback, properties) {
-		var image_div = document.createElement('div');
+		var image_div = document.createElement('div', 'bb-tab-pane');
 		image_div.innerHTML = '<form>' +
 			[
 				'<label>Адрес:</label>',
@@ -154,11 +175,54 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 				f.align.selectedIndex = 2;
 			}
 		}
+		
+		var files_div = w.$.create_top('div', 'bb-tab-pane');
+		files_div.innerHTML = '<div class="select_album" style="display: none;"><select><option>Новый альбом</option></select></div><div class="list_images"></div>';
+		files_div.style.display = 'none';
+		w.$.ajax('/wwg/my/files.php', function(r){
+			var x;
+			eval('x = ' + r);
+			var html = '<table width="100%" cellpadding="3"><tbody>';
+			for (var i in x) {
+				html += '<tr><td><img src="' + x[i].path + '" /></td><td><a href="#" onclick="return false;">' + x[i].name + '</a></td><td>delete</td></tr>';
+			}
+			html += '</tbody></table>';
+			files_div.lastChild.innerHTML = html;
+			files_div.onclick = function (e) {
+				e = e || window.event;
+				var t = e.target || e.srcElement;
+				if (t && t.nodeName === 'A') {
+					image_div.firstChild.src.value = t.parentNode.previousSibling.firstChild.src;
+					self.modal.ok.onclick();
+				}
+			};
+		});
+		
 		var div = w.$.create_top('div');
-		div.innerHTML = '<ul class="tabs" id="tabs"><li class="active"><a href="#image">Image</a></li><li><a href="#files">Files</a></li></ul><div id="image"></div><div id="files"></div>';
-		//div.getElementById('image').appendChild(image_div);
-		//div.getElementById('files').appendChild(files_div);
-		this.show_modal_dialog({caption: 'Вставка изображения'}, div, function () {
+		div.innerHTML = '<ul class="tabs" id="tabs"><li class="active"><a href="#image">Внешнее изображение</a></li><li><a href="#files">Изображение из альбома</a></li></ul><div id="image"></div><div id="files"></div>';
+		div.lastChild.appendChild(image_div);
+		div.lastChild.previousSibling.appendChild(files_div);
+		var image_tab = div.firstChild.firstChild;
+		var files_tab = div.firstChild.lastChild;
+		files_tab.firstChild.onclick = function () {
+			files_div.style.display = '';
+			image_div.style.display = 'none';
+			w.$.remove_class(image_tab, 'active');
+			w.$.add_class(files_tab, 'active');
+			return false;
+		}
+		image_tab.firstChild.onclick = function () {
+			files_div.style.display = 'none';
+			image_div.style.display = '';
+			w.$.add_class(image_tab, 'active');
+			w.$.remove_class(files_tab, 'active');
+			return false;
+		}
+		self.modal = w.show_modal_dialog({
+			caption: 'Вставка изображения',
+			width: 350,
+			height: 400
+		}, div, function () {
 			var f = image_div.firstChild;
 			callback({
 				src: f.src.value,
@@ -188,6 +252,7 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 			properties.image = selStart;
 		}
 		show_image_dialog(function (properties) {
+			console.log(properties);
 			if (properties.image) {
 				var parent = properties.image.parentNode;
 				if (parent.nodeName === 'A') {
@@ -214,11 +279,21 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 		}, properties);
 	};
 	this.update = '<IMG>';
-	this.label = '+ Файл';
+	this.html = '<a class="bb-file" href="#">+ Файл</a>';
+	// todo: make default action instead of this
+	this.init = function (element_holder) {
+		self.el = element_holder.firstChild;
+		element_holder.firstChild.onclick = function () {
+			if (!w.$.has_class(self.el.parentNode, 'disabled')) {
+				self.action();
+			}
+		};
+	}
 	this.panel = 'btns_big';
 };
 
 Wysiwyg.prototype.plugins.link = function (w) {
+	var self = this;
 	this.image = 'bb-link';
 	this.command = 'createlink';
 	function show_linkcreator(linkNode, callback) {
@@ -242,7 +317,16 @@ Wysiwyg.prototype.plugins.link = function (w) {
 			}
 		});
 	};
-	this.label = 'Ссылка';
+	this.html = '<a class="bb-link" href="#">Ссылка</a>';
+	// todo: make default action instead of this
+	this.init = function (element_holder) {
+		self.el = element_holder.firstChild;
+		self.el.onclick = function () {
+			if (!w.$.has_class(self.el.parentNode, 'disabled')) {
+				self.action();
+			}
+		};
+	}
 	this.panel = 'btns_big';
 	this.update = function (bel, state) {
 		if (w.$.in_array('A', state.parents) !== -1) {

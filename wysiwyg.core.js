@@ -67,7 +67,7 @@ function Wysiwyg(textarea, options) {
 		for (var i = 0; i < s.length; i++) {
 			s[i].display = s[i].display ? '' : 'none';
 		}
-		
+
 		// todo: resize textarea/iframe
 		return false;
 	};
@@ -148,7 +148,7 @@ function Wysiwyg(textarea, options) {
 			}
 		}
 	});
-	
+
 	$.add_event(this.doc, 'keyup mouseup', function (e) {
 		if (e.type == 'mouseup' || e.ctrlKey || e.metaKey || (e.keyCode >= 8 && e.keyCode <= 13) || (e.keyCode>=32 && e.keyCode<= 40) || e.keyCode == 46 || (e.keyCode >=96 && e.keyCode <= 111)) {
 			self.update_controls();
@@ -214,31 +214,32 @@ Wysiwyg.prototype = {
 	},
 	init_controls: function () {
 		var w = this, editor = w.doc, body = editor.body;
-		
+
 		w.initialized_plugins = [];
-		
+
 		function init(block, plugin) {
 			if (plugin === '|') {
 				w.$.create_top('li', 'editor-separator', block);
 				return;
 			}
-			
+
 			if (!w.plugins[plugin]) {
 				return;
 			}
-			
+
 			var p = new w.plugins[plugin](w);
-			
+
 			var button_holder = w.$.create_top('li', p.className || false, block);
 			if (p.html) {
 				button_holder.innerHTML = p.html;
+				p.init && p.init(button_holder);
 			} else {
 				var button = w.$.create_top('a', false, button_holder);
 				var image = w.$.create_top('img', false, button);
 				image.src = 'images/' + p.image + '.gif';
 				button.href = '#';
 				p.el = button;
-	
+
 				button.onclick = function (e) {
 					if (w.$.has_class(button_holder, 'disabled')) {
 						return false;
@@ -252,13 +253,13 @@ Wysiwyg.prototype = {
 						w.update_controls();
 						w.win.focus();
 					}
-					
+
 					return false;
 				};
 			}
 			w.initialized_plugins.push(p);
 		}
-		
+
 		w.$.each([
 			{
 				block: w.$.create_top('ul', false, w.controls),
@@ -277,7 +278,7 @@ Wysiwyg.prototype = {
 				init(panel.block, name);
 			});
 		});
-		
+
 	},
 	switch_design_mode: function () {
 		var self = this;
@@ -306,7 +307,7 @@ Wysiwyg.prototype = {
 		self.selection.save_selection && self.selection.save_selection();
 		var overlay = document.createElement('div');
 		overlay.id = 'overlay';
-		
+
 		document.body.appendChild(overlay);
 
 		var dialog_wrapper = document.createElement('div');
@@ -379,7 +380,7 @@ Wysiwyg.prototype = {
 		btn_cancel.onclick = function () {
 			overlay.parentNode.removeChild(overlay);
 		}
-		
+
 		var btn_ok = $.create_top('button');
 		btn_ok.innerHTML = 'OK';
 		btn_ok.onclick = function () {
@@ -398,7 +399,7 @@ Wysiwyg.prototype = {
 		dialog_wrapper.style.top = Math.round((overlay.offsetHeight - dialog_wrapper.offsetHeight) / 2) + 'px';
 
 		overlay.style.visibility = 'visible';
-		
+
 		return {ok: btn_ok, cancel: btn_cancel};
 	}
 };

@@ -335,8 +335,8 @@ ul.colorpicker {
 	float: left;
 	margin: 0;
 	padding: 0;
-	width:139px;
-	height:139px;
+	width: 139px;
+	height: 139px;
 }
 ul.colorpicker li{
 	list-style: none;
@@ -345,4 +345,29 @@ ul.colorpicker li{
 	border: 1px solid #000;
 	margin: 1px;
 	float: left;
+}
+ul.tabs {
+	clear: both;
+	list-style: none;
+}
+ul.tabs li{
+	list-style: none;
+	float: left;
+	height: 17px;
+	margin: 1px;
+	padding: 3px;
+}
+ul.tabs li a{
+	text-decoration: none;
+	color: #555;
+}
+ul.tabs li.active{
+	font-weight: 700;
+}
+ul.tabs li.active a{
+	color: #000;
+}
+.bb-tab-pane{
+	height: 250px;
+	clear: both;
 }

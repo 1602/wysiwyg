@@ -354,7 +354,7 @@ Util.prototype.selection = function () {
 				} else {
 					for (var i in class_name) {
 						if (class_name.hasOwnProperty(i)) {
-							new_parent.setAttribute(i, class_name[i]);
+							new_parent.setAttribute(i === 'class' ? 'className' : i, class_name[i]);
 						}
 					}
 				}
@@ -390,3 +390,15 @@ Util.prototype.selection = function () {
 	s.$ = this;
 	return s;
 };
+
+Util.prototype.ajax = function (url, callback) {
+	var xhr = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
+	xhr.open('GET', url, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            callback(xhr.responseText);
+        }
+    }
+    xhr.send();
+}
