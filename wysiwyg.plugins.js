@@ -252,7 +252,6 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 			properties.image = selStart;
 		}
 		show_image_dialog(function (properties) {
-			console.log(properties);
 			if (properties.image) {
 				var parent = properties.image.parentNode;
 				if (parent.nodeName === 'A') {
