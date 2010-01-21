@@ -228,18 +228,23 @@ Wysiwyg.prototype = {
 			}
 
 			var p = new w.plugins[plugin](w);
-
+			var button;
 			var button_holder = w.$.create_top('li', p.className || false, block);
 			if (p.html) {
 				button_holder.innerHTML = p.html;
-				p.init && p.init(button_holder);
+				button = button_holder.firstChild;
 			} else {
-				var button = w.$.create_top('a', false, button_holder);
+				button = w.$.create_top('a', false, button_holder);
 				var image = w.$.create_top('img', false, button);
 				image.src = 'images/' + p.image + '.gif';
 				button.href = '#';
 				p.el = button;
 
+			}
+			
+			if (p.init) {
+				p.init(button_holder);
+			} else {
 				button.onclick = function (e) {
 					if (w.$.has_class(button_holder, 'disabled')) {
 						return false;

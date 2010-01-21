@@ -371,3 +371,7 @@ ul.tabs li.active a{
 	height: 250px;
 	clear: both;
 }
+
+form table th {
+	text-align: right;
+}

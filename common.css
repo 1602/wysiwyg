@@ -73,5 +73,6 @@ ul {
 }
 
 .wysiwyg-mode .bb-hide:before {
+	color: #888;
 	content: 'Скрытый контент: '
 }
