@@ -296,7 +296,7 @@ Util.prototype.selection = function () {
 			return this.r.htmlText;
 		};
 
-		this.save_selection = function() {
+		this.save_selection = function () {
 			this.create_range();
 			if (this.r.item) {
 				var n = this.r.item(0);
@@ -306,13 +306,17 @@ Util.prototype.selection = function () {
 			this.bookmark = this.r.getBookmark();
 		};
 
-		this.restore_selection = function() {
+		this.restore_selection = function () {
 			if (this.bookmark) {
 				this.create_range();
 				this.r.moveToBookmark(this.bookmark);
 				this.r.select();
 			}
 		};
+		
+		this.get_html = function () {
+			return this.r.htmlText;
+		}
 
 	};
 

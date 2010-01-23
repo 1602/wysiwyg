@@ -134,6 +134,15 @@ function Wysiwyg(textarea, options) {
 
 	this.win.focus();
 
+	if ($.browser.msie) {
+		this.doc.onkeydown = function () {
+			if (self.win.event.keyCode === 13 && self.selection.filter('.spoiler')) {
+				self.selection.insert_node(self.doc.createElement('br'));
+				return false;
+			}
+		}
+	}
+	
 	$.add_event(this.doc, 'keydown', function (e) {
 		/* if ($.browser.safari && e.keyCode === 13) {
 			if (e.shiftKey || !self.dom.parent(self.selection.getNode(), /^(P|LI)$/)) {
@@ -141,7 +150,7 @@ function Wysiwyg(textarea, options) {
 				return false;
 			}
 		} */
-		if ($.browser.opera && e.keyCode === 13) {
+		if (($.browser.opera) && e.keyCode === 13) {
 			if (self.selection.filter('.spoiler')) {
 				self.selection.insert_node($.create('br'));
 				return false;
@@ -181,7 +190,6 @@ Wysiwyg.prototype = {
 			}
 			cur = cur.parentNode;
 		}
-
 		var source_mode = this.mode === 'text';
 		for (var i in this.initialized_plugins) {
 			var p = this.initialized_plugins[i], bel = p.el && p.el.parentNode;
@@ -239,7 +247,6 @@ Wysiwyg.prototype = {
 				image.src = 'images/' + p.image + '.gif';
 				button.href = '#';
 				p.el = button;
-
 			}
 			
 			if (p.init) {
@@ -268,7 +275,7 @@ Wysiwyg.prototype = {
 		w.$.each([
 			{
 				block: w.$.create_top('ul', false, w.controls),
-				buttons: ['bold', '|', 'italic', '|', 'underline', '|', 'fontsize', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'setcolor', '|', 'mode_switcher']
+				buttons: ['bold', '|', 'italic', '|', 'underline', '|', 'fontsize', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'setcolor'/* , '|', 'mode_switcher' */]
 			},
 			{
 				block: w.$.create_top('ul', false, w.btns_big),

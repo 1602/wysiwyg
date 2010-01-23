@@ -25,13 +25,12 @@ for (var i in std_commands) {
 						return;
 					}
 					try {
-						if (this.doc.queryCommandState(this.action)) {
+						if (w.doc.queryCommandState(this.action)) {
 							w.$.add_class(bel, 'click');
 						} else {
 							w.$.remove_class(bel, 'click');
 						}
 					} catch (e) {
-						
 					}
 				}
 			}
@@ -57,14 +56,24 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 			var span = w.$.create('span', 'bb-font-size');
 			span.style.fontSize = font_size;
 			w.selection.insert_node(span);
-			w.win.focus();
 		} else {
-			alert(w.selection.get_start());
-			w.selection.wrap_with('span', {
+			var node = w.selection.get_selection_as_node();
+			var x = node.firstChild.nextSibling;
+			if (x && x.className === 'bb-font-size') {
+				x.style.fontSize = font_size;
+				w.selection.insert_node(x);
+			} else {
+				var span = w.$.create('span', 'bb-font-size');
+				span.style.fontSize = font_size;
+				span.appendChild(node);
+				w.selection.insert_node(span);
+			}
+			/* w.selection.wrap_with('span', {
 				'style': 'font-size:' + font_size,
 				'class': 'bb-font-size'
-			});
+			}); */
 		}
+		w.win.focus();
 	};
 	this.init = function (element_holder) {
 		self.el = element_holder.lastChild;
@@ -146,9 +155,12 @@ Wysiwyg.prototype.plugins.link = function (w) {
 		div.innerHTML = '<form><div class="modal-type">Адрес ссылки:</div>' +
 			'<input type="text" name="url" class="modal-text" value="' + (linkNode ? linkNode.getAttribute('href') : '') + '" />' +
 			'</form>';
-		w.show_modal_dialog({caption: 'Вставка ссылки'}, div, function (div) {
+		var modal = w.show_modal_dialog({caption: 'Вставка ссылки'}, div, function (div) {
 			callback(div.firstChild.url.value);
 		});
+		div.firstChild.onsubmit = function () {
+			modal.ok.onclick();
+		};
 	}
 	this.action = function () {
 		var linkNode = w.selection.filter('a');
@@ -257,7 +269,7 @@ Wysiwyg.prototype.plugins.hide = function (w) {
 		div.innerHTML = '<form><div class="modal-type">Количество сообщений:</div>' +
 		'<input name="count" class="modal-text" value="' + (hideNode ? hideNode.getAttribute('value') : '') + '" />' +
 		'</form>';
-		w.show_modal_dialog({caption: 'Вставка скрытого контента'}, div, function (div) {
+		var modal = w.show_modal_dialog({caption: 'Вставка скрытого контента'}, div, function (div) {
 			var v = parseInt(div.firstChild.count.value, 10);
 			if (isNaN(v)) {
 				div.firstChild.count.focus();
@@ -271,6 +283,9 @@ Wysiwyg.prototype.plugins.hide = function (w) {
 			}
 			callback(v);
 		});
+		div.firstChild.onsubmit = function () {
+			modal.ok.onclick();
+		};
 	}
 	this.action = function () {
 		var hide = w.selection.filter('.bb-hide');
@@ -391,9 +406,12 @@ Wysiwyg.prototype.plugins.media = function (w) {
 		div.innerHTML = '<form><div class="modal-type">Код видео:</div>' +
 			'<textarea name="code"></textarea>' +
 		'</form>';
-		w.show_modal_dialog({caption: 'Вставка медиа'}, div, function (div) {
+		var modal = w.show_modal_dialog({caption: 'Вставка медиа'}, div, function (div) {
 			callback(div.firstChild.code.value);
 		});
+		div.firstChild.onsubmit = function () {
+			modal.ok.onclick();
+		};
 	}
 	this.update = '.bb-media';
 	this.action = function () {
