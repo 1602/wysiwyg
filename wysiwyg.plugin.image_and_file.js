@@ -30,7 +30,7 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 			};
 		});
 	};
-	
+
 	function switch_to_image_properties() {
 		self.files_div.style.display = 'none';
 		self.image_div.style.display = '';
@@ -38,7 +38,7 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 		w.$.remove_class(self.files_tab, 'active');
 		return false;
 	}
-	
+
 	function switch_to_image_list() {
 		self.files_div.style.display = '';
 		self.image_div.style.display = 'none';
@@ -46,30 +46,30 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 		w.$.add_class(self.files_tab, 'active');
 		return false;
 	}
-	
+
 	this.init_file_upload_form = function () {
 		var self = this;
-		
+
 		function start() {
 			self.file_upload_form.form_submit.disabled = true;
 			self.file_upload_form.form_submit.value = 'Загрузка файла...';
 		}
-		
+
 		function complete(path) {
 			self.file_upload_form.form_submit.disabled = false;
 			self.file_upload_form.form_submit.value = 'Загрузить файл';
 			self.load_files();
 		}
-		
+
 		this.file_upload_form.onsubmit = function () {
 			w.$.ajax_upload(self.file_upload_form, {
 				on_start: start,
 				on_complete: complete
 			});
 		};
-		
+
 	};
-	
+
 	this.show_image_dialog = function (callback, properties) {
 		var self = this;
 		this.image_div = document.createElement('div', 'bb-tab-pane');
@@ -110,7 +110,7 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 				f.align.selectedIndex = 2;
 			}
 		}
-		
+
 		this.files_div = w.$.create_top('div', 'bb-tab-pane');
 		this.files_div.innerHTML = '<div class="select_album" style="display: block;"><form action="' + this.file_uploader_path + '" method="POST" enctype="multipart/form-data"><input type="file" name="picture" /><input type="submit" value="Загрузить файл" name="form_submit" /></form><!--select><option>Новый альбом</option></select--></div><div class="list_images"></div>';
 		this.files_div.style.display = 'none';
@@ -142,7 +142,7 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 			});
 		});
 	};
-	
+
 	this.action = function () {
 		var properties;
 		var selStart = w.selection.get_start();

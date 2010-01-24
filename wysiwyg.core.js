@@ -3,9 +3,9 @@
 function Wysiwyg(textarea, options) {
 	options = options || {};
 	options.min_width = options.min_width || 674;
-	options.max_width = options.max_width || 800;
+	options.max_width = options.max_width || 1024;
 	options.min_height = options.min_height || 315;
-	options.max_height = options.max_height || 600;
+	options.max_height = options.max_height || 768;
 
 	this.$ = new Util(this);
 
@@ -14,63 +14,78 @@ function Wysiwyg(textarea, options) {
 
 	this.workspace = $.create_top('div', 'secure_wysiwyg_editor');
 
-	var x = $.create_top('div', 'editor-top', this.workspace);
-	var editor = $.create_top('div', 'editor', this.workspace);
-	var btm = $.create_top('div', 'editor-bottom', this.workspace);
-	btm.innerHTML = '<div class="editor-stretch"><a title="растянуть" href="#"><img alt="растянуть" src="images/stretch.gif"/></a></div>';
-	btm.firstChild.onmousedown = function (e) {
-		e = e || window.event;
-		var ip = {};
-		ip.y = e.clientY;
-		ip.x = e.clientX;
-		ip.h = editor.offsetHeight;
-		ip.w = editor.offsetWidth;
-		ip.eh = self.iframe.offsetHeight;
-		ip.ew = self.iframe.offsetWidth;
-		ip.th = self.tp.offsetHeight;
-		ip.tw = self.tp.offsetWidth;
-
-		var overlay = $.create_top('div', null, document.body);
-		$.set_style(overlay, {
-			position: 'absolute',
-			left: 0,
-			top: 0,
-			width: '100%',
-			height: '100%',
-			zIndex: 100
-		});
-
-		function update_size(e) {
-			var h = ip.h + e.clientY - ip.y;
-			var w = ip.w + e.clientX - ip.x;
-			if (options.min_width <= w && w <= options.max_width) {
-				editor.style.width = w + 'px';
-				self.iframe.style.width = ip.ew + e.clientX - ip.x + 'px';
-				self.tp.style.width = ip.tw + e.clientX - ip.x + 'px';
-			}
-			if (options.min_height <= h && h <= options.max_height) {
-				editor.style.height = h + 'px';
-				self.iframe.style.height = ip.eh + e.clientY - ip.y + 'px';
-				self.tp.style.height = ip.th + e.clientY - ip.y + 'px';
-			}
-		}
-
-		document.onmousemove = function (e) {
+	function resizer(el) {
+		el.onmousedown = function (e) {
 			e = e || window.event;
-			update_size(e);
-		};
+			var ip = {};
+			ip.y = e.clientY;
+			ip.x = e.clientX;
+			ip.h = editor.offsetHeight;
+			ip.w = editor.offsetWidth;
+			ip.eh = self.iframe.offsetHeight;
+			ip.ew = self.iframe.offsetWidth - 20;
+			ip.th = self.tp.offsetHeight;
+			ip.tw = self.tp.offsetWidth;
+			ip.cw = self.controls.offsetWidth;
 
-		document.onmouseup = function () {
-			document.onmousemove = null;
-			document.onmouseup = null;
-			document.body.removeChild(overlay);
-		};
-		return false;
-	};
+			var overlay = $.create_top('div', null, document.body);
+			$.set_style(overlay, {
+				position: 'absolute',
+				left: 0,
+				top: 0,
+				width: '100%',
+				height: '100%',
+				zIndex: 100
+			});
 
-	// top controls (with logo)
+			function update_size(e) {
+				var h = ip.h + e.clientY - ip.y;
+				var w = ip.w + e.clientX - ip.x;
+				if (options.min_width <= w && w <= options.max_width) {
+					editor.style.width = w + 'px';
+					self.iframe.style.width = ip.ew + e.clientX - ip.x + 'px';
+					self.tp.style.width = ip.tw + e.clientX - ip.x + 'px';
+					self.controls.style.width = ip.cw + e.clientX - ip.x + 'px';
+				}
+				if (options.min_height <= h && h <= options.max_height) {
+					editor.style.height = h + 'px';
+					self.iframe.style.height = ip.eh + e.clientY - ip.y + 'px';
+					self.tp.style.height = ip.th + e.clientY - ip.y + 'px';
+				}
+			}
+
+			document.onmousemove = function (e) {
+				e = e || window.event;
+				update_size(e);
+			};
+
+			document.onmouseup = function () {
+				document.onmousemove = null;
+				document.onmouseup = null;
+				document.body.removeChild(overlay);
+			};
+			return false;
+		};
+	}
+
+	//var x = $.create_top('div', 'editor-top', this.workspace);
+	var editor = $.create_top('div', 'editor', this.workspace);
+
+	// top-level corners
+	$.each(['etl', 'etr', 'ebl', 'ebr'], function (i, class_name) {
+		$.create_top('div', class_name, editor);
+	});
+
+	// stretch (resizer)
+	var editor_stretch = $.create_top('div', 'editor-stretch', editor);
+	editor_stretch.innerHTML = '<a title="растянуть" href="#"><img alt="растянуть" src="images/stretch.gif"/></a>';
+	resizer(editor_stretch);
+
+	// top controls (with logo and rounded corners)
 	this.controls = $.create_top('div', 'btns-top', editor);
-	$.create_top('div', 'editor-logo', this.controls);
+	$.each(['editor-logo', 'ettl', 'ettr', 'etbl', 'etbr'], function (i, class_name) {
+		$.create_top('div', class_name, self.controls);
+	});
 
 	// hide and show
 	var hideandshow_div = $.create_top('div', 'hideandshow', editor);
@@ -78,15 +93,13 @@ function Wysiwyg(textarea, options) {
 	hideandshow_link.href = "#";
 	hideandshow_link.innerHTML = '<img title="" alt="" src="images/hide.gif" style="display: none;" /><img title="" alt="" src="images/show.gif" />';
 	hideandshow_link.onclick = function () {
-		var s = [
+		$.each([
 			self.controls.style,
 			hideandshow_link.firstChild.style,
 			hideandshow_link.lastChild.style
-		];
-		for (var i = 0; i < s.length; i++) {
-			s[i].display = s[i].display ? '' : 'none';
-		}
-
+		], function (i, s) {
+			s.display = s.display ? '' : 'none';
+		});
 		// todo: resize textarea/iframe
 		return false;
 	};
@@ -102,9 +115,12 @@ function Wysiwyg(textarea, options) {
 	$.create_top('div', 'clear', editor);
 
 	// editor area
-	$.create_top('div', 'textarea-top', textplace);
 	var editor_keeper = $.create_top('div', 'textborder', textplace);
-	$.create_top('div', 'textarea-bottom', textplace);
+
+	// editor-level corners
+	$.each(['eetl', 'eetr', 'eebl', 'eebr'], function (i, class_name) {
+		$.create_top('div', class_name, editor_keeper);
+	});
 
 	// visual and text editors
 	this.source = $.create_top('textarea', 'textarea', editor_keeper);

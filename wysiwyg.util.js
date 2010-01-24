@@ -11,7 +11,7 @@ function Util(wysiwyg) {
 		msie: /msie/.test(user_agent) && !/opera/.test(user_agent),
 		mozilla: /mozilla/.test(user_agent) && !/(compatible|webkit)/.test(user_agent)
 	};
-	
+
 	function create_element(nodeName, class_name, parent_node) {
 		var node = this.createElement(nodeName);
 		if (class_name) {
@@ -22,11 +22,11 @@ function Util(wysiwyg) {
 		}
 		return node;
 	}
-	
+
 	this.create = function () {
 		return create_element.apply(wysiwyg.doc, arguments);
 	};
-	
+
 	this.create_top = function (node_name, class_name, parent_node) {
 		return create_element.apply(document, arguments);
 	};
@@ -315,7 +315,7 @@ Util.prototype.selection = function (top) {
 				this.r.select();
 			}
 		};
-		
+
 		this.get_html = function () {
 			this.create_range();
 			return this.r.htmlText;
@@ -381,7 +381,7 @@ Util.prototype.selection = function (top) {
 			var r = get_range();
 			return r.extractContents();
 		};
-		
+
 		this.get_html = function () {
 			if (this.collapsed()) {
 				return '';
@@ -392,9 +392,9 @@ Util.prototype.selection = function (top) {
 			return div.innerHTML;
 		};
 	};
-	
+
 	var S = this.browser.msie ? ie_selection : normal_selection;
-	
+
 	S.prototype.filter = function (selector) {
 		var s = this.get_start();
 		if (selector.charAt(0) === '.') {
@@ -403,7 +403,7 @@ Util.prototype.selection = function (top) {
 			return this.$.get_parent_by_tag_name(s, selector);
 		}
 	};
-	
+
 	var s = new S(top ? window : this.wysiwyg.win);
 	s.$ = this;
 	return s;

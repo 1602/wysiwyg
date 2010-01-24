@@ -1,6 +1,6 @@
 /*global Wysiwyg*/
 (function () {
-	
+
 	function init_standart_action(action, image) {
 		return function (w) {
 			this.image = image;
@@ -26,7 +26,7 @@
 			};
 		};
 	}
-		
+
 	var std_commands = {
 		bold: 'bb-bold',
 		italic: 'bb-italic',
@@ -124,7 +124,7 @@ Wysiwyg.prototype.plugins.setcolor = function (w) {
 				/* div.lastChild.innerHTML = 'Выбран цвет <div style="display:inline-block; vertical-align: middle; width:20px; height: 20px; border: 1px solid #000; margin:5px; background-color: ' + selected_color + '"></div>'; */
 				div.style.color = t.style.backgroundColor;
 				div.lastChild.innerHTML = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
-				
+
 			}
 		};
 		w.show_modal_dialog({caption: 'Выбор цвета'}, div, function (div) {
