@@ -1,4 +1,4 @@
-// 15-17 x 21-24
+/*global ActiveXObject*/
 
 function Util(wysiwyg) {
 	var self = this;
@@ -34,17 +34,18 @@ function Util(wysiwyg) {
 
 Util.prototype = {
 	trim: function (text) {
-		return (text || "").replace( /^\s+|\s+$/g, "" );
+		return (text || "").replace(/^\s+|\s+$/g, "");
 	},
 	each: function (collection, callback) {
+		var i, len;
 		if (this.is_array(collection)) {
-			for (var i = 0, len = collection.length; i < len; i++) {
+			for (i = 0, len = collection.length; i < len; i++) {
 				if (callback(i, collection[i]) === false) {
 					break;
 				}
 			}
 		} else {
-			for (var i in collection) {
+			for (i in collection) {
 				if (collection.hasOwnProperty(i)) {
 					if (callback(i, collection[i]) === false) {
 						break;
@@ -55,15 +56,15 @@ Util.prototype = {
 	},
 	get_parents: function (node) {
 		var parents = [];
-		while (node = node.parentNode) {
+		while ((node = node.parentNode)) {
 			parents.push(node);
 		}
 		return parents;
 	},
 	deepest_parent_of: function (node1, node2) {
-		if (node1 == node2) {
+		if (node1 === node2) {
 			return node1;
-		} else if (node1.nodeName == 'BODY' || node2.nodeName == 'BODY') {
+		} else if (node1.nodeName === 'BODY' || node2.nodeName === 'BODY') {
 			return node1;
 		}
 		var parents1 = this.get_parents(node1).reverse(), len1 = parents1.length;
@@ -72,12 +73,12 @@ Util.prototype = {
 		var common_parent;
 		for (var i = 0; i < len; i++) {
 			if (parents1[i] === parents2[i]) {
-				c = parents1[i];
+				common_parent = parents1[i];
 			} else {
 				break;
 			}
 		}
-		return c;
+		return common_parent;
 	},
 	regExp: {
 		textNodes         : /^(A|ABBR|ACRONYM|ADDRESS|B|BDO|BIG|BLOCKQUOTE|CAPTION|CENTER|CITE|CODE|DD|DEL|DFN|DIV|DT|EM|FIELDSET|FONT|H[1-6]|I|INS|KBD|LABEL|LEGEND|LI|MARQUEE|NOBR|NOEMBED|P|PRE|Q|SAMP|SMALL|SPAN|STRIKE|STRONG|SUB|SUP|TD|TH|TT|VAR)$/,
@@ -95,14 +96,15 @@ Util.prototype = {
 		}
 	},
 	add_event: function (element, events, callback) {
+		var i, len;
 		if (this.is_array(element)) {
-			for (var i = 0, len = element.length; i < len; i++ ) {
+			for (i = 0, len = element.length; i < len; i++) {
 				this.add_event(element[i], events, callback);
 			}
 			return;
 		}
 		events = events.split(' ');
-		for (var i = 0; i < events.length; i++) {
+		for (i = 0, len = events.length; i < len; i++) {
 			var event = events[i];
 			if (element.attachEvent) {
 				element.attachEvent(event, callback);
@@ -150,12 +152,12 @@ Util.prototype = {
 		return {minX: sx, minY: sy, maxX: w + sx - el.offsetWidth - 20, maxY: h + sy - el.offsetHeight};
 	},
 	is_empty_node: function (n) {
-		if (n.nodeType == 1) {
-			return util.regExp.textNodes.test(n.nodeName) ? $.trim($(n).text()).length == 0 : false;
-		} else if (n.nodeType == 3) {
-			return /^(TABLE|THEAD|TFOOT|TBODY|TR|UL|OL|DL)$/.test(n.parentNode.nodeName)
-				|| n.nodeValue == ''
-				|| ($.trim(n.nodeValue).length== 0 && !(n.nextSibling && n.previousSibling && n.nextSibling.nodeType==1 && n.previousSibling.nodeType==1 && !this.regExp.block.test(n.nextSibling.nodeName) && !this.regExp.block.test(n.previousSibling.nodeName) ));
+		if (n.nodeType === 1) {
+			return this.regExp.textNodes.test(n.nodeName) ? this.trim(n.nodeValue).length === 0 : false;
+		} else if (n.nodeType === 3) {
+			return (/^(TABLE|THEAD|TFOOT|TBODY|TR|UL|OL|DL)$/).test(n.parentNode.nodeName) ||
+				n.nodeValue === '' ||
+				(this.trim(n.nodeValue).length === 0 && !(n.nextSibling && n.previousSibling && n.nextSibling.nodeType === 1 && n.previousSibling.nodeType === 1 && !this.regExp.block.test(n.nextSibling.nodeName) && !this.regExp.block.test(n.previousSibling.nodeName)));
 		}
 		return true;
 	},
@@ -224,17 +226,17 @@ Util.prototype = {
 	}
 };
 
-Util.prototype.selection = function () {
+Util.prototype.selection = function (top) {
 	var ie_selection = function (win) {
 		var self = this;
 		this.win = win;
 		this.doc = win.document;
 
-		this.create_range = function() {
+		this.create_range = function () {
 			this.win.focus();
 			try { 
 				this.r = this.doc.selection.createRange(); 
-			} catch(e) { 
+			} catch (e) { 
 				this.r = this.doc.body.createTextRange(); 
 			}
 			return this.r;
@@ -255,8 +257,8 @@ Util.prototype.selection = function () {
 			this.create_range();
 			var r = this.r.duplicate();
 			var html;
-			if (node.nodeType == 3) {
-				html = n.nodeValue;
+			if (node.nodeType === 3) {
+				html = node.nodeValue;
 			} else {
 				var fakeNode = this.doc.createElement('span');
 				fakeNode.appendChild(node);
@@ -278,7 +280,7 @@ Util.prototype.selection = function () {
 			var params = [];
 			if (class_name) {
 				if (typeof class_name === 'string') {
-					class_name = {'class':class_name};
+					class_name = {'class': class_name};
 				}
 				for (var i in class_name) {
 					if (class_name.hasOwnProperty(i)) {
@@ -316,7 +318,7 @@ Util.prototype.selection = function () {
 		
 		this.get_html = function () {
 			return this.r.htmlText;
-		}
+		};
 
 	};
 
@@ -336,9 +338,9 @@ Util.prototype.selection = function () {
 
 		this.get_start = function () {
 			var r = get_range();
-			return r.startContainer.nodeType === 1
-				? r.startContainer.childNodes[Math.min(r.startOffset, r.startContainer.childNodes.length - 1)]
-				: r.startContainer;
+			return r.startContainer.nodeType === 1 ?
+				r.startContainer.childNodes[Math.max(0, Math.min(r.startOffset, r.startContainer.childNodes.length - 1))] :
+				r.startContainer;
 		};
 
 		this.insert_node = function (node) {
@@ -356,7 +358,7 @@ Util.prototype.selection = function () {
 			var r = get_range();
 			var new_parent = this.doc.createElement(tag_name);
 			if (class_name) {
-				if (typeof class_name == 'string') {
+				if (typeof class_name === 'string') {
 					new_parent.className = class_name;
 				} else {
 					for (var i in class_name) {
@@ -378,22 +380,30 @@ Util.prototype.selection = function () {
 			var r = get_range();
 			return r.extractContents();
 		};
+		
+		this.get_html = function () {
+			if (this.collapsed()) {
+				return '';
+			}
+			var fragment = get_range().cloneContents();
+			var div = this.doc.createElement('div');
+			div.appendChild(fragment);
+			return div.innerHTML;
+		};
 	};
 	
 	var S = this.browser.msie ? ie_selection : normal_selection;
 	
 	S.prototype.filter = function (selector) {
 		var s = this.get_start();
-		switch (selector.charAt(0)) {
-		case '.':
+		if (selector.charAt(0) === '.') {
 			return this.$.get_parent_by_class_name(s, selector.substr(1));
-			break;
-		default:
+		} else {
 			return this.$.get_parent_by_tag_name(s, selector);
 		}
-	}
+	};
 	
-	var s = new S(this.wysiwyg.win);
+	var s = new S(top ? window : this.wysiwyg.win);
 	s.$ = this;
 	return s;
 };
@@ -402,13 +412,13 @@ Util.prototype.ajax = function (url, callback) {
 	var xhr = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
 	xhr.open('GET', url, true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
             callback(xhr.responseText);
         }
-    }
+    };
     xhr.send();
-}
+};
 
 Util.prototype.ajax_upload = function (form_element, callbacks) {
 	var n = 'f' + Math.floor(Math.random() * 99999);
@@ -419,7 +429,7 @@ Util.prototype.ajax_upload = function (form_element, callbacks) {
 	var iframe = div.firstChild;
 	iframe.onload = function () {
 		var doc = iframe.contentDocument || iframe.contentWindow.document;
-		if (doc.location.href == "about:blank") {
+		if (doc.location.href === "about:blank") {
 			return;
 		}
 		if (typeof iframe.on_complete === 'function') {
@@ -427,10 +437,10 @@ Util.prototype.ajax_upload = function (form_element, callbacks) {
 		}
 	};
 	if (callbacks) {
-		iframe.on_complete = callbacks.on_complete
-		if (typeof callbacks.on_start == 'function') {
+		iframe.on_complete = callbacks.on_complete;
+		if (typeof callbacks.on_start === 'function') {
 			return callbacks.on_start();
 		}
 	}
 	return false;
-}
+};

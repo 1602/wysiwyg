@@ -1,3 +1,5 @@
+/*global Wysiwyg*/
+
 Wysiwyg.prototype.plugins.image_and_file = function (w) {
 	var self = this;
 	this.image = 'bb-file';
@@ -6,12 +8,15 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 	this.file_index_path = '/wwg/my/files.php';
 	this.load_files = function () {
 		var self = this;
-		w.$.ajax(self.file_index_path, function(r) {
+		w.$.ajax(self.file_index_path, function (r) {
 			var x;
+			// TODO: eval is evil
 			eval('x = ' + r);
 			var html = '<table width="100%" cellpadding="3"><tbody>';
 			for (var i in x) {
-				html += '<tr><td><img style="max-width: 100px; max-height: 100px;" src="' + x[i].path + '" /></td><td><a href="#" onclick="return false;">' + x[i].name + '</a></td><td>delete</td></tr>';
+				if (x.hasOwnProperty(i)) {
+					html += '<tr><td><img style="max-width: 100px; max-height: 100px;" src="' + x[i].path + '" /></td><td><a href="#" onclick="return false;">' + x[i].name + '</a></td><td>delete</td></tr>';
+				}
 			}
 			html += '</tbody></table>';
 			self.files_div.lastChild.innerHTML = html;
@@ -63,7 +68,7 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 			});
 		};
 		
-	}
+	};
 	
 	this.show_image_dialog = function (callback, properties) {
 		var self = this;
@@ -88,12 +93,12 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 		f.onsubmit = function () {
 			self.modal.ok.onclick();
 			return false;
-		}
+		};
 		if (properties) {
 			f.src.value = properties.src;
 			f.alt.value = properties.alt;
 			f.css.value = properties.css;
-			f.border.checked = properties.border == 1;
+			f.border.checked = parseInt(properties.border, 10) === 1;
 			if (properties.link) {
 				f.link.value = properties.link;
 			}

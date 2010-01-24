@@ -1,3 +1,5 @@
+/*global Util */
+
 function Wysiwyg(textarea, options) {
 	options = options || {};
 	options.min_width = options.min_width || 674;
@@ -140,7 +142,8 @@ function Wysiwyg(textarea, options) {
 				self.selection.insert_node(self.doc.createElement('br'));
 				return false;
 			}
-		}
+			this.text_modified();
+		};
 	}
 	
 	$.add_event(this.doc, 'keydown', function (e) {
@@ -156,18 +159,23 @@ function Wysiwyg(textarea, options) {
 				return false;
 			}
 		}
+		this.text_modified();
 	});
 
 	$.add_event(this.doc, 'keyup mouseup', function (e) {
-		if (e.type == 'mouseup' || e.ctrlKey || e.metaKey || (e.keyCode >= 8 && e.keyCode <= 13) || (e.keyCode>=32 && e.keyCode<= 40) || e.keyCode == 46 || (e.keyCode >=96 && e.keyCode <= 111)) {
+		if (e.type === 'mouseup' || e.ctrlKey || e.metaKey ||
+			(e.keyCode >= 8 && e.keyCode <= 13) ||
+			(e.keyCode >= 32 && e.keyCode <= 40) || e.keyCode === 46 ||
+			(e.keyCode >= 96 && e.keyCode <= 111)) {
 			self.update_controls();
 		}
+		this.text_modified();
 	});
 
 	this.init_controls();
 	this.win.focus();
 	this.update_controls();
-};
+}
 
 Wysiwyg.prototype = {
 	plugins: {},
@@ -175,13 +183,13 @@ Wysiwyg.prototype = {
 		var self = this,
 			node = this.selection.get_start(),
 			cur = node,
-			regex_tagname = /^\<(.*?)\>$/,
+			regex_tagname = /^<(.*?)\>$/,
 			regex_classname = /^\.(.*)$/;
 		var state = {
 			parents: [],
 			parent_classes: [],
 			selection_collapsed: this.selection.collapsed()
-		}
+		};
 		while (cur && cur.nodeName) {
 			state.parents.push(cur.nodeName);
 			var cls = cur.getAttribute && cur.getAttribute('class');
@@ -192,30 +200,33 @@ Wysiwyg.prototype = {
 		}
 		var source_mode = this.mode === 'text';
 		for (var i in this.initialized_plugins) {
-			var p = this.initialized_plugins[i], bel = p.el && p.el.parentNode;
-			if (!bel) continue;
-			if (source_mode) {
-				if (p.command === 'show_source') {
-					self.$.remove_class(bel, 'disabled');
-				} else {
-					self.$.add_class(bel, 'disabled');
+			if (this.initialized_plugins.hasOwnProperty(i)) {
+				var p = this.initialized_plugins[i], bel = p.el && p.el.parentNode;
+				if (!bel) {
+					continue;
 				}
-				self.$.remove_class(bel, 'click');
-				continue;
-			}
-			if (typeof p.update === 'function') {
-				p.update(bel, state);
-			} else if (typeof p.update === 'string') {
-				self.$.remove_class(bel, 'disabled');
-				var matched_tagname = false, matched_classname = false;
-				if ((matched_tagname = p.update.match(regex_tagname)) &&
-					self.$.in_array(matched_tagname[1], state.parents) !== -1 ||
-					(matched_classname = p.update.match(regex_classname)) &&
-					self.$.in_array(matched_classname[1], state.parent_classes) !== -1
-				) {
-					self.$.add_class(bel, 'click');
-				} else {
+				if (source_mode) {
+					if (p.command === 'show_source') {
+						self.$.remove_class(bel, 'disabled');
+					} else {
+						self.$.add_class(bel, 'disabled');
+					}
 					self.$.remove_class(bel, 'click');
+					continue;
+				}
+				if (typeof p.update === 'function') {
+					p.update(bel, state);
+				} else if (typeof p.update === 'string') {
+					self.$.remove_class(bel, 'disabled');
+					var matched_tagname = false, matched_classname = false;
+					if ((matched_tagname = p.update.match(regex_tagname)) &&
+						self.$.in_array(matched_tagname[1], state.parents) !== -1 ||
+						(matched_classname = p.update.match(regex_classname)) &&
+						self.$.in_array(matched_classname[1], state.parent_classes) !== -1) {
+						self.$.add_class(bel, 'click');
+					} else {
+						self.$.remove_class(bel, 'click');
+					}
 				}
 			}
 		}
@@ -313,10 +324,12 @@ Wysiwyg.prototype = {
 			this.mode = 'design';
 		}
 	},
-	show_modal_dialog: function(options, contents_div, callback) {
+	show_modal_dialog: function (options, contents_div, callback) {
 		var self = this;
 		var $ = this.$;
-		self.selection.save_selection && self.selection.save_selection();
+		if (self.selection.save_selection) {
+			self.selection.save_selection();
+		}
 		var overlay = document.createElement('div');
 		overlay.id = 'overlay';
 
@@ -335,7 +348,7 @@ Wysiwyg.prototype = {
 
 		// round corners
 		var corners = ['mtl', 'mtr', 'mbl', 'mbr'];
-		for (var i = 0; i < 4; i++ ) {
+		for (var i = 0; i < 4; i++) {
 			var corner = document.createElement('div');
 			self.$.add_class(corner, corners[i]);
 			dialog_wrapper.appendChild(corner);
@@ -375,7 +388,7 @@ Wysiwyg.prototype = {
 				dialog_wrapper.style.top = y + 'px';
 			};
 			return false;
-		}
+		};
 
 		var descr_div = document.createElement('div');
 		$.add_class(descr_div, 'modaldescr');
@@ -391,18 +404,22 @@ Wysiwyg.prototype = {
 		btn_cancel.innerHTML = 'Cancel';
 		btn_cancel.onclick = function () {
 			overlay.parentNode.removeChild(overlay);
-		}
+		};
 
 		var btn_ok = $.create_top('button');
 		btn_ok.innerHTML = 'OK';
 		btn_ok.onclick = function () {
-			self.selection.restore_selection && self.selection.restore_selection();
+			if (self.selection.restore_selection) {
+				self.selection.restore_selection();
+			}
 			var r = callback(contents_div);
 			if (r === false) {
 				return false;
 			}
 			overlay.parentNode.removeChild(overlay);
-		}
+			
+			self.text_modified();
+		};
 
 		footer.appendChild(btn_ok);
 		footer.appendChild(btn_cancel);
@@ -413,5 +430,14 @@ Wysiwyg.prototype = {
 		overlay.style.visibility = 'visible';
 
 		return {ok: btn_ok, cancel: btn_cancel};
+	},
+	update_textarea: function () {
+		this.source.value = this.doc.body.innerHTML;
+	},
+	text_modified_timeout: null
+	,
+	text_modified: function () {
+		clearTimeout(this.text_modified_timeout);
+		this.text_modified_timeout = setTimeout(this.update_textarea, 2000);
 	}
 };
