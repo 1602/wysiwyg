@@ -317,6 +317,7 @@ Util.prototype.selection = function (top) {
 		};
 		
 		this.get_html = function () {
+			this.create_range();
 			return this.r.htmlText;
 		};
 

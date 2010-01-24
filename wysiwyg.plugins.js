@@ -233,14 +233,29 @@ Wysiwyg.prototype.plugins.quote = function (w) {
 	this.update = '<BLOCKQUOTE>';
 	this.panel = 'btns_small';
 	this.top_selection = w.$.selection(true);
-	w.insert_quote = function (author) {
+	this.n = 1;
+	w.insert_quote = function (author, div_id) {
 		var quote = w.doc.createElement('blockquote');
 		var top_selection_html = self.top_selection.get_html();
+		if (!top_selection_html) {
+			if (div_id) {
+				var source_el = document.getElementById(div_id);
+				top_selection_html = source_el ? source_el.innerHTML : '';
+			} else {
+				top_selection_html = '<br />';
+			}
+		}
 		if (author) {
 			top_selection_html = '<div class="bb-quote-author">' + author + '</div>' + top_selection_html;
 		}
-		quote.innerHTML = top_selection_html || '<br />';
-		w.selection.insert_node(quote);
+		quote.innerHTML = top_selection_html;
+		if (w.is_msie) {
+			w.doc.body.innerHTML += '<blockquote id="bb_quote_' + self.n + '">' + top_selection_html + '</blockquote>';
+			w.win.location.hash = 'bb_quote_' + self.n;
+			self.n += 1;
+		} else {
+			w.selection.insert_node(quote);
+		}
 	};
 };
 

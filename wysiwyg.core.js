@@ -159,7 +159,7 @@ function Wysiwyg(textarea, options) {
 				self.selection.insert_node(self.doc.createElement('br'));
 				return false;
 			}
-			this.text_modified();
+			self.text_modified();
 		};
 	}
 
@@ -176,7 +176,7 @@ function Wysiwyg(textarea, options) {
 				return false;
 			}
 		}
-		this.text_modified();
+		self.text_modified();
 	});
 
 	$.add_event(this.doc, 'keyup mouseup', function (e) {
@@ -186,7 +186,7 @@ function Wysiwyg(textarea, options) {
 			(e.keyCode >= 96 && e.keyCode <= 111)) {
 			self.update_controls();
 		}
-		this.text_modified();
+		self.text_modified();
 	});
 
 	this.init_controls();
@@ -454,7 +454,10 @@ Wysiwyg.prototype = {
 	text_modified_timeout: null
 	,
 	text_modified: function () {
+		var self = this;
 		clearTimeout(this.text_modified_timeout);
-		this.text_modified_timeout = setTimeout(this.update_textarea, 2000);
+		this.text_modified_timeout = setTimeout(function () {
+			self.update_textarea();
+		}, 500);
 	}
 };

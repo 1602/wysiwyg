@@ -26,10 +26,10 @@ window.onload = function () {
 </head>
 <body>
 
-<p>
+<p id="originalcontent">
 Quisque <b>lectus</b> augue, <i>egestas</i> eget <u>consequat</u> faucibus, pharetra eu leo. Quisque libero augue, volutpat gravida lobortis non, accumsan sit amet metus. Phasellus consectetur ante in dolor lobortis gravida.
 </p>
-<input type="button" onclick="wysiwyg.insert_quote('author'); return false" value="Quote" />
+<input type="button" onclick="wysiwyg.insert_quote('author', 'originalcontent'); return false" value="Quote" />
 
 <form action="">
 <textarea id="text" cols="80" rows="30">
