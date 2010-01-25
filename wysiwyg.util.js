@@ -445,3 +445,31 @@ Util.prototype.ajax_upload = function (form_element, callbacks) {
 	}
 	return false;
 };
+
+Util.prototype.localization = function (code) {
+	
+	this.messages = {};
+	
+	this.messages.ru_RU = {
+		bold: 'Жирный',
+		italic: 'Курсив',
+		underline: 'Подчеркнутый',
+		justifyfull: 'Выравнивание по странице',
+		justifyleft: 'Выравнивание по левому краю',
+		justifyright: 'Выравнивание по правому краю',
+		justifycenter: 'Выравнивание по центру',
+		insertunorderedlist: 'Список',
+		undo: 'Отменить',
+		redo: 'Повторить',
+		quote: 'Цитата',
+		spoiler: 'Спойлер',
+		hide: 'Хайд',
+		code: 'Код',
+		smile: 'Смайлы',
+		media: 'Медиа'
+	};
+	
+	this.translate = function (name, namespace) {
+		return this.messages[code][name] || name;
+	};
+};

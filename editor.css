@@ -129,12 +129,13 @@
 	vertical-align:top;
 }
 .btns-top {
-	width:652px;
+	/* width:652px; */
 	height:37px;
 	background:url(images/btns-top.gif) repeat-x;
 	border-left:1px solid #e1e1e1;
 	border-right:1px solid #e1e1e1;
 	margin-left:11px;
+	margin-right:11px;
 	position:relative;
 }
 .btns-top img {
@@ -147,6 +148,8 @@ noindex:-o-prefocus, .btns-top img {
 	list-style:none;
 	margin-left:200px;
 	padding-top:7px;
+	float: right;
+	margin-right: 10px;
 }
 .btns-top li {
 	float:left;

@@ -35,7 +35,7 @@ function Wysiwyg(textarea, options) {
 				top: 0,
 				width: '100%',
 				height: '100%',
-				zIndex: 100
+				zIndex: 1000
 			});
 
 			function update_size(e) {
@@ -45,7 +45,7 @@ function Wysiwyg(textarea, options) {
 					editor.style.width = w + 'px';
 					self.iframe.style.width = ip.ew + e.clientX - ip.x + 'px';
 					self.tp.style.width = ip.tw + e.clientX - ip.x + 'px';
-					self.controls.style.width = ip.cw + e.clientX - ip.x + 'px';
+					//self.controls.style.width = ip.cw + e.clientX - ip.x + 'px';
 				}
 				if (options.min_height <= h && h <= options.max_height) {
 					editor.style.height = h + 'px';
@@ -57,6 +57,7 @@ function Wysiwyg(textarea, options) {
 			document.onmousemove = function (e) {
 				e = e || window.event;
 				update_size(e);
+				return false;
 			};
 
 			document.onmouseup = function () {
@@ -135,6 +136,7 @@ function Wysiwyg(textarea, options) {
 			display: 'none'
 		},
 		iframe: {
+			zIndex: 1,
 			border: '0'
 		}
 	};
@@ -166,6 +168,7 @@ function Wysiwyg(textarea, options) {
 	}
 
 	this.selection = $.selection();
+	this.locale = new $.localization('ru_RU');
 
 	this.win.focus();
 
@@ -287,9 +290,14 @@ Wysiwyg.prototype = {
 				button = button_holder.firstChild;
 			} else {
 				button = w.$.create_top('a', false, button_holder);
-				var image = w.$.create_top('img', false, button);
-				image.src = 'images/' + p.image + '.gif';
+				if (p.image) {
+					var image = w.$.create_top('img', false, button);
+					image.src = 'images/' + p.image + '.gif';
+				} else if (p.anchorClass) {
+					button.className = p.anchorClass;
+				}
 				button.href = '#';
+				button.title = w.locale.translate(plugin);
 				p.el = button;
 			}
 

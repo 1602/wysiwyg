@@ -3,7 +3,8 @@
 
 	function init_standart_action(action, image) {
 		return function (w) {
-			this.image = image;
+			//this.image = image;
+			this.anchorClass = image;
 			this.action = action;
 			this.update = function (bel) {
 				try {
