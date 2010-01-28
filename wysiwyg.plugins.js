@@ -94,7 +94,7 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 };
 
 Wysiwyg.prototype.plugins.setcolor = function (w) {
-	this.image = 'bb-color';
+	this.anchorClass = 'bb-color';
 	this.command = 'setcolor';
 	this.update = 'always_enabled';
 
