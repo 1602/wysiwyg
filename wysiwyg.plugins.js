@@ -269,7 +269,7 @@ Wysiwyg.prototype.plugins.spoiler = function (w) {
 			spoiler = w.$.create('div', 'spoiler');
 
 			var toggler = w.$.create('div', 'toggler', spoiler);
-			toggler.innerHTML = 'click to toggle spoiler';
+			toggler.innerHTML = '&nbsp;';
 			toggler.setAttribute('onclick', 'var s = this.nextSibling.style; s.display = s.display ? \'none\' : \'\'; return false; ');
 
 			var hidden_text = w.$.create('div', 'hidden_text', spoiler);

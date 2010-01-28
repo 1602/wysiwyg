@@ -128,16 +128,7 @@ Util.prototype = {
 			return -1;
 		}
 	},
-	calc_drag_bounds: function (el) {
-		// Calc visible screen bounds (this code is common)
-		var w = 0, h = 0;
-		if (typeof(window.innerWidth) === 'number') {// не msie
-			w = window.innerWidth;
-			h = window.innerHeight;
-		} else if (document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
-			w = document.documentElement.clientWidth;
-			h = document.documentElement.clientHeight;
-		}
+	calc_scroll: function () {
 		var sx = 0, sy = 0;
 		if (typeof window.pageYOffset === 'number') {
 			sx = window.pageXOffset;
@@ -149,7 +140,20 @@ Util.prototype = {
 			sx = document.documentElement.scrollLeft;
 			sy = document.documentElement.scrollTop;
 		}
-		return {minX: sx, minY: sy, maxX: w + sx - el.offsetWidth - 20, maxY: h + sy - el.offsetHeight};
+		return {x: sx, y: sy};
+	},
+	calc_drag_bounds: function (el) {
+		// Calc visible screen bounds (this code is common)
+		var w = 0, h = 0;
+		if (typeof(window.innerWidth) === 'number') {// не msie
+			w = window.innerWidth;
+			h = window.innerHeight;
+		} else if (document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+			w = document.documentElement.clientWidth;
+			h = document.documentElement.clientHeight;
+		}
+		var scroll = this.calc_scroll;
+		return {minX: scroll.x, minY: scroll.y, maxX: w + sx - el.offsetWidth - 20, maxY: h + sy - el.offsetHeight};
 	},
 	is_empty_node: function (n) {
 		if (n.nodeType === 1) {
@@ -466,7 +470,9 @@ Util.prototype.localization = function (code) {
 		hide: 'Хайд',
 		code: 'Код',
 		smile: 'Смайлы',
-		media: 'Медиа'
+		media: 'Медиа',
+		setcolor: 'Цвет текста',
+		mode_switcher: 'Исходный текст / WYSIWYG'
 	};
 	
 	this.translate = function (name, namespace) {

@@ -31,6 +31,10 @@ body {
 	width: 200px;
 	cursor: pointer;
 }
+.spoiler .toggler:before {
+	color: #888;
+	content: 'Спойлер: '
+}
 
 .spoiler .hidden_text {
 	border: 1px dashed #000;

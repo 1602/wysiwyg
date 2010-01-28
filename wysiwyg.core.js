@@ -2,10 +2,13 @@
 
 function Wysiwyg(textarea, options) {
 	options = options || {};
-	options.min_width = options.min_width || 674;
+	options.admin_mode = options.admin_mode || false;
+	options.min_width = options.min_width || (674 + (options.admin_mode ? 35 : 0));
 	options.max_width = options.max_width || 1024;
 	options.min_height = options.min_height || 315;
 	options.max_height = options.max_height || 768;
+	
+	this.options = options;
 
 	this.$ = new Util(this);
 
@@ -20,9 +23,9 @@ function Wysiwyg(textarea, options) {
 			var ip = {};
 			ip.y = e.clientY;
 			ip.x = e.clientX;
-			ip.h = editor.offsetHeight;
+			ip.h = editor.offsetHeight - 20;
 			ip.w = editor.offsetWidth;
-			ip.eh = self.iframe.offsetHeight;
+			ip.eh = self.iframe.offsetHeight - 20;
 			ip.ew = self.iframe.offsetWidth - 20;
 			ip.th = self.tp.offsetHeight;
 			ip.tw = self.tp.offsetWidth;
@@ -39,18 +42,20 @@ function Wysiwyg(textarea, options) {
 			});
 
 			function update_size(e) {
-				var h = ip.h + e.clientY - ip.y;
-				var w = ip.w + e.clientX - ip.x;
+				var dx = (e.clientX - ip.x) * 2;
+				var dy = e.clientY - ip.y;
+				var h = ip.h + dy;
+				var w = ip.w + dx;
 				if (options.min_width <= w && w <= options.max_width) {
 					editor.style.width = w + 'px';
-					self.iframe.style.width = ip.ew + e.clientX - ip.x + 'px';
-					self.tp.style.width = ip.tw + e.clientX - ip.x + 'px';
+					self.iframe.style.width = ip.ew + dx + 'px';
+					self.tp.style.width = ip.tw + dx + 'px';
 					//self.controls.style.width = ip.cw + e.clientX - ip.x + 'px';
 				}
 				if (options.min_height <= h && h <= options.max_height) {
 					editor.style.height = h + 'px';
-					self.iframe.style.height = ip.eh + e.clientY - ip.y + 'px';
-					self.tp.style.height = ip.th + e.clientY - ip.y + 'px';
+					self.iframe.style.height = ip.eh + dy + 'px';
+					self.tp.style.height = ip.th + dy + 'px';
 				}
 			}
 
@@ -67,10 +72,12 @@ function Wysiwyg(textarea, options) {
 			};
 			return false;
 		};
+		
 	}
 
 	//var x = $.create_top('div', 'editor-top', this.workspace);
 	var editor = $.create_top('div', 'editor', this.workspace);
+	editor.style.width = this.options.min_width + 'px';
 
 	// top-level corners
 	$.each(['etl', 'etr', 'ebl', 'ebr'], function (i, class_name) {
@@ -323,11 +330,17 @@ Wysiwyg.prototype = {
 			}
 			w.initialized_plugins.push(p);
 		}
-
+		
+		var top_panel_buttons = ['bold', '|', 'italic', '|', 'underline', '|', 'fontsize', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'setcolor'];
+		if (w.options.admin_mode) {
+			top_panel_buttons.push('|');
+			top_panel_buttons.push('mode_switcher');
+		}
+		
 		w.$.each([
 			{
 				block: w.$.create_top('ul', false, w.controls),
-				buttons: ['bold', '|', 'italic', '|', 'underline', '|', 'fontsize', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'setcolor'/* , '|', 'mode_switcher' */]
+				buttons: top_panel_buttons
 			},
 			{
 				block: w.$.create_top('ul', false, w.btns_big),
@@ -373,6 +386,20 @@ Wysiwyg.prototype = {
 		}
 		var overlay = document.createElement('div');
 		overlay.id = 'overlay';
+		var sx = 0, sy = 0;
+		if (typeof window.pageYOffset === 'number') {
+			sx = window.pageXOffset;
+			sy = window.pageYOffset;
+		} else if (document.body && (document.body.scrollLeft || document.body.scrollTop)) {
+			sx = document.body.scrollLeft;
+			sy = document.body.scrollTop;
+		} else if (document.documentElement && (document.documentElement.scrollLeft || document.documentElement.scrollTop)) {
+			sx = document.documentElement.scrollLeft;
+			sy = document.documentElement.scrollTop;
+		}
+		var scroll = $.calc_scroll();
+		overlay.style.top = scroll.y + 'px';
+		overlay.style.left = scroll.x + 'px';
 
 		document.body.appendChild(overlay);
 
