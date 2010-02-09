@@ -474,3 +474,54 @@ Wysiwyg.prototype.plugins.redo = function (w) {
 	this.image = 'bb-next';
 	this.action = 'redo';
 };
+
+Wysiwyg.prototype.plugins.fullscreen = function (w) {
+	var self = this;
+	this.image = 'bb-next';
+	this.action = function () {
+		if (w.fullscreen && w.stored_dimensions) {
+			w.workspace.style.position = '';
+			w.workspace.style.left = '';
+			w.workspace.style.top = '';
+			w.workspace.style.height = '';
+			w.workspace.style.width = '';
+			w.workspace.style.background = '';
+			
+			w.workspace.firstChild.style.width = w.stored_dimensions.edw + 'px';
+			w.workspace.firstChild.style.height = w.stored_dimensions.edh + 'px';
+			w.tp.style.width = w.stored_dimensions.tpw + 2 + 'px';
+			w.tp.style.height = w.stored_dimensions.tph + 'px';
+			w.iframe.style.width = w.stored_dimensions.ifw - 18 + 'px';
+			w.iframe.style.height = w.stored_dimensions.ifh + 2 + 'px';
+		} else {
+			w.$.set_style(w.workspace, {
+				position: 'absolute',
+				left: 0,
+				top: 0,
+				width: '100%',
+				height: '100%',
+				background: '#fff'
+			});
+			w.stored_dimensions = {
+				edw: w.workspace.firstChild.offsetWidth,
+				edh: w.workspace.firstChild.offsetHeight,
+				tpw: w.tp.offsetWidth,
+				tph: w.tp.offsetHeight,
+				ifw: w.iframe.offsetWidth,
+				ifh: w.iframe.offsetHeight
+			};
+			var dw = w.workspace.offsetWidth - w.workspace.firstChild.offsetWidth - 2;
+			var dh = w.workspace.offsetHeight - w.workspace.firstChild.offsetHeight - 22;
+			w.workspace.firstChild.style.width = w.workspace.firstChild.offsetWidth + dw + 'px';
+			w.workspace.firstChild.style.height = w.workspace.firstChild.offsetHeight + dh + 'px';
+			w.tp.style.width = w.tp.offsetWidth + dw + 2 + 'px';
+			w.tp.style.height = w.tp.offsetHeight + dh + 'px';
+			w.iframe.style.width = w.iframe.offsetWidth + dw - 18 + 'px';
+			w.iframe.style.height = w.iframe.offsetHeight + dh + 2 + 'px';
+			/* setTimeout(function(){
+				self.action(w);
+			},1); */
+		}
+		w.fullscreen = !w.fullscreen;
+	};
+};
