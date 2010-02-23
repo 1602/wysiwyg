@@ -18,6 +18,7 @@ function Wysiwyg(textarea, options) {
 	this.workspace = $.create_top('div', 'secure_wysiwyg_editor');
 
 	function resizer(el) {
+		self.resizer = el;
 		el.onmousedown = function (e) {
 			e = e || window.event;
 			var ip = {};

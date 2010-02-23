@@ -480,6 +480,7 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 	this.image = 'bb-next';
 	this.action = function () {
 		if (w.fullscreen && w.stored_dimensions) {
+			w.resizer.style.display = '';
 			w.workspace.style.position = '';
 			w.workspace.style.left = '';
 			w.workspace.style.top = '';
@@ -494,6 +495,7 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 			w.iframe.style.width = w.stored_dimensions.ifw - 18 + 'px';
 			w.iframe.style.height = w.stored_dimensions.ifh + 2 + 'px';
 		} else {
+			w.resizer.style.display = 'none';
 			w.$.set_style(w.workspace, {
 				position: 'absolute',
 				left: 0,
