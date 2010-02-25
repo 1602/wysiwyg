@@ -19,7 +19,7 @@ function Util(wysiwyg) {
 		}
 		if (parent_node) {
 			parent_node.appendChild(node);
-		}
+		}                         
 		return node;
 	}
 
@@ -111,6 +111,13 @@ Util.prototype = {
 			} else {
 				element.addEventListener(event, callback, false);
 			}
+		}
+	},
+	remove_event: function (element, event, callback) {
+		if (element.detachEvent) {
+			element.detachEvent(event, callback);
+		} else {
+			element.removeEventListener(event, callback, false);
 		}
 	},
 	is_array: function (obj) {

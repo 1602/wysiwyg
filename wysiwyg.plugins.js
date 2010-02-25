@@ -478,52 +478,80 @@ Wysiwyg.prototype.plugins.redo = function (w) {
 Wysiwyg.prototype.plugins.fullscreen = function (w) {
 	var self = this;
 	this.image = 'bb-next';
-	this.action = function () {
-		if (w.fullscreen && w.stored_dimensions) {
+	
+	var default_workspace_style = {
+		position: '',
+		left: '',
+		top: '',
+		width: '',
+		height: '',
+		background: ''
+	};
+	
+	var fullscreen_workspace_style = {
+		position: 'absolute',
+		left: 0,
+		top: 0,
+		width: '100%',
+		height: '100%',
+		background: '#fff'
+	};
+	
+	var dim = {};
+	
+	function store_size() {
+		dim.edw = w.workspace.firstChild.offsetWidth;
+		dim.edh = w.workspace.firstChild.offsetHeight;
+		dim.tpw = w.tp.offsetWidth;
+		dim.tph = w.tp.offsetHeight;
+		dim.ifw = w.iframe.offsetWidth;
+		dim.ifh = w.iframe.offsetHeight;
+	}
+	
+	function restore_size() {
+		w.workspace.firstChild.style.width = dim.edw + 'px';
+		w.workspace.firstChild.style.height = dim.edh + 'px';
+		w.tp.style.width = dim.tpw + 2 + 'px';
+		w.tp.style.height = dim.tph + 'px';
+		w.iframe.style.width = dim.ifw - 18 + 'px';
+		w.iframe.style.height = dim.ifh + 2 + 'px';
+	}
+	
+	function fullscreen() {
+		var dw = w.workspace.offsetWidth - w.workspace.firstChild.offsetWidth - 2;
+		var dh = w.workspace.offsetHeight - w.workspace.firstChild.offsetHeight - 22;
+		w.workspace.firstChild.style.width = w.workspace.firstChild.offsetWidth + dw + 'px';
+		w.workspace.firstChild.style.height = w.workspace.firstChild.offsetHeight + dh + 'px';
+		w.tp.style.width = w.tp.offsetWidth + dw + 2 + 'px';
+		w.tp.style.height = w.tp.offsetHeight + dh + 'px';
+		w.iframe.style.width = w.iframe.offsetWidth + dw - 18 + 'px';
+		w.iframe.style.height = w.iframe.offsetHeight + dh + 2 + 'px';
+	}
+	
+	function adjust_size() {
+		if (!w.fullscreen) {
 			w.resizer.style.display = '';
-			w.workspace.style.position = '';
-			w.workspace.style.left = '';
-			w.workspace.style.top = '';
-			w.workspace.style.height = '';
-			w.workspace.style.width = '';
-			w.workspace.style.background = '';
-			
-			w.workspace.firstChild.style.width = w.stored_dimensions.edw + 'px';
-			w.workspace.firstChild.style.height = w.stored_dimensions.edh + 'px';
-			w.tp.style.width = w.stored_dimensions.tpw + 2 + 'px';
-			w.tp.style.height = w.stored_dimensions.tph + 'px';
-			w.iframe.style.width = w.stored_dimensions.ifw - 18 + 'px';
-			w.iframe.style.height = w.stored_dimensions.ifh + 2 + 'px';
+			w.$.set_style(w.workspace, default_workspace_style);
+			restore_size();
 		} else {
 			w.resizer.style.display = 'none';
-			w.$.set_style(w.workspace, {
-				position: 'absolute',
-				left: 0,
-				top: 0,
-				width: '100%',
-				height: '100%',
-				background: '#fff'
-			});
-			w.stored_dimensions = {
-				edw: w.workspace.firstChild.offsetWidth,
-				edh: w.workspace.firstChild.offsetHeight,
-				tpw: w.tp.offsetWidth,
-				tph: w.tp.offsetHeight,
-				ifw: w.iframe.offsetWidth,
-				ifh: w.iframe.offsetHeight
-			};
-			var dw = w.workspace.offsetWidth - w.workspace.firstChild.offsetWidth - 2;
-			var dh = w.workspace.offsetHeight - w.workspace.firstChild.offsetHeight - 22;
-			w.workspace.firstChild.style.width = w.workspace.firstChild.offsetWidth + dw + 'px';
-			w.workspace.firstChild.style.height = w.workspace.firstChild.offsetHeight + dh + 'px';
-			w.tp.style.width = w.tp.offsetWidth + dw + 2 + 'px';
-			w.tp.style.height = w.tp.offsetHeight + dh + 'px';
-			w.iframe.style.width = w.iframe.offsetWidth + dw - 18 + 'px';
-			w.iframe.style.height = w.iframe.offsetHeight + dh + 2 + 'px';
-			/* setTimeout(function(){
-				self.action(w);
-			},1); */
+			w.$.set_style(w.workspace, fullscreen_workspace_style);
+			store_size();
+			fullscreen();
 		}
+	}
+	
+	function switch_mode() {
 		w.fullscreen = !w.fullscreen;
+		if (w.fullscreen) {
+			w.$.add_event(window, 'resize', fullscreen);
+		} else {
+			w.$.remove_event(window, 'resize', fullscreen);
+		}
+	}
+	
+	this.action = function () {
+		switch_mode();
+		adjust_size();
 	};
 };
