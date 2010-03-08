@@ -3,11 +3,11 @@
 function Wysiwyg(textarea, options) {
 	options = options || {};
 	options.admin_mode = options.admin_mode || false;
-	options.min_width = options.min_width || (674 + (options.admin_mode ? 35 : 0));
+	options.min_width = options.min_width || 674;
 	options.max_width = options.max_width || 1024;
 	options.min_height = options.min_height || 315;
 	options.max_height = options.max_height || 768;
-	
+
 	this.options = options;
 
 	this.$ = new Util(this);
@@ -73,11 +73,12 @@ function Wysiwyg(textarea, options) {
 			};
 			return false;
 		};
-		
+
 	}
 
 	//var x = $.create_top('div', 'editor-top', this.workspace);
 	var editor = $.create_top('div', 'editor', this.workspace);
+	// min width of editor should be updated after top-buttons-panel initialization
 	editor.style.width = this.options.min_width + 'px';
 
 	// top-level corners
@@ -219,6 +220,20 @@ function Wysiwyg(textarea, options) {
 	this.init_controls();
 	this.win.focus();
 	this.update_controls();
+	
+	// adjust min height
+	var top_panel_ul = this.controls.lastChild;
+	var li = top_panel_ul.firstChild;
+	var ul_width = 0;
+	while (li) {
+		ul_width += li.offsetWidth;
+		li = li.nextSibling;
+	}
+	var new_min_width = 434 + ul_width;
+	if (this.options.min_width < new_min_width) {
+		this.options.min_width = new_min_width;
+		editor.style.width = this.options.min_width + 'px';
+	}
 }
 
 Wysiwyg.prototype = {
@@ -331,13 +346,13 @@ Wysiwyg.prototype = {
 			}
 			w.initialized_plugins.push(p);
 		}
-		
+
 		var top_panel_buttons = ['bold', '|', 'italic', '|', 'underline', '|', 'fontsize', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'setcolor', '|', 'fullscreen'];
 		if (w.options.admin_mode) {
 			top_panel_buttons.push('|');
 			top_panel_buttons.push('mode_switcher');
 		}
-		
+
 		w.$.each([
 			{
 				block: w.$.create_top('ul', false, w.controls),
@@ -356,7 +371,6 @@ Wysiwyg.prototype = {
 				init(panel.block, name);
 			});
 		});
-
 	},
 	switch_design_mode: function () {
 		var self = this;
