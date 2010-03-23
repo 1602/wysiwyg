@@ -149,7 +149,7 @@ Util.prototype = {
 		}
 		return {x: sx, y: sy};
 	},
-	calc_drag_bounds: function (el) {
+	calc_screen_bounds: function () {
 		// Calc visible screen bounds (this code is common)
 		var w = 0, h = 0;
 		if (typeof(window.innerWidth) === 'number') {// не msie
@@ -159,8 +159,11 @@ Util.prototype = {
 			w = document.documentElement.clientWidth;
 			h = document.documentElement.clientHeight;
 		}
-		var scroll = this.calc_scroll;
-		return {minX: scroll.x, minY: scroll.y, maxX: w + sx - el.offsetWidth - 20, maxY: h + sy - el.offsetHeight};
+		return {w: w, h: h};
+	},
+	calc_drag_bounds: function (el) {
+		var b = this.calc_screen_bounds();
+		return {minX: 0, minY: 0, maxX: b.w - el.offsetWidth - 20, maxY: b.h - el.offsetHeight};
 	},
 	is_empty_node: function (n) {
 		if (n.nodeType === 1) {

@@ -101,7 +101,7 @@ function Wysiwyg(textarea, options) {
 	var hideandshow_div = $.create_top('div', 'hideandshow', editor);
 	var hideandshow_link = $.create_top('a', false, hideandshow_div);
 	hideandshow_link.href = "#";
-	hideandshow_link.innerHTML = '<img title="" alt="" src="images/hide.gif" style="display: none;" /><img title="" alt="" src="images/show.gif" />';
+	hideandshow_link.innerHTML = '<img title="" alt="" src="/js/editor/images/hide.gif" style="display: none;" /><img title="" alt="" src="/js/editor/images/show.gif" />';
 	hideandshow_link.onclick = function () {
 		$.each([
 			self.controls.style,
@@ -401,20 +401,12 @@ Wysiwyg.prototype = {
 		}
 		var overlay = document.createElement('div');
 		overlay.id = 'overlay';
-		var sx = 0, sy = 0;
-		if (typeof window.pageYOffset === 'number') {
-			sx = window.pageXOffset;
-			sy = window.pageYOffset;
-		} else if (document.body && (document.body.scrollLeft || document.body.scrollTop)) {
-			sx = document.body.scrollLeft;
-			sy = document.body.scrollTop;
-		} else if (document.documentElement && (document.documentElement.scrollLeft || document.documentElement.scrollTop)) {
-			sx = document.documentElement.scrollLeft;
-			sy = document.documentElement.scrollTop;
-		}
 		var scroll = $.calc_scroll();
+		var bounds = $.calc_screen_bounds();
 		overlay.style.top = scroll.y + 'px';
 		overlay.style.left = scroll.x + 'px';
+		overlay.style.width = bounds.w - 20 + 'px';
+		overlay.style.height = bounds.h + 'px';
 
 		document.body.appendChild(overlay);
 
