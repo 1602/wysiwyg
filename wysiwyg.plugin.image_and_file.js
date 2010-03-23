@@ -4,8 +4,8 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 	var self = this;
 	this.image = 'bb-file';
 	this.command = 'insertimage';
-	this.file_uploader_path = '/wwg/my/upload_file.php';
-	this.file_index_path = '/wwg/my/files.php';
+	this.file_uploader_path = 'upload_file.php';
+	this.file_index_path = 'files.php';
 	this.load_files = function () {
 		var self = this;
 		w.$.ajax(self.file_index_path, function (r) {

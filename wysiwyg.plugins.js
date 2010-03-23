@@ -37,6 +37,7 @@
 		justifyright: 'bb-textright',
 		justifycenter: 'bb-textcenter',
 		insertunorderedlist: 'bb-nonumberlist',
+		insertorderedlist: 'bb-nonumberlist',
 		undo: 'bb-prev',
 		redo: 'bb-next'
 	};
@@ -477,7 +478,7 @@ Wysiwyg.prototype.plugins.redo = function (w) {
 
 Wysiwyg.prototype.plugins.fullscreen = function (w) {
 	var self = this;
-	this.image = 'bb-next';
+	this.anchorClass = 'bb-fullscreen';
 	
 	var default_workspace_style = {
 		position: '',
@@ -499,6 +500,20 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 	
 	var dim = {};
 	
+	var overlay = document.createElement('div');
+	overlay.className = 'overlay';
+
+	document.body.appendChild(overlay);
+
+	function update_overlay() {
+		var scroll = w.$.calc_scroll();
+		var bounds = w.$.calc_screen_bounds();
+		overlay.style.top = scroll.y + 'px';
+		overlay.style.left = scroll.x + 'px';
+		overlay.style.width = bounds.w - 20 + 'px';
+		overlay.style.height = bounds.h + 'px';
+	}
+
 	function store_size() {
 		dim.edw = w.workspace.firstChild.offsetWidth;
 		dim.edh = w.workspace.firstChild.offsetHeight;
@@ -528,13 +543,33 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 		w.iframe.style.height = w.iframe.offsetHeight + dh + 2 + 'px';
 	}
 	
+	var saved_parent = null;
+	var show_me = [];
 	function adjust_size() {
 		if (!w.fullscreen) {
 			w.resizer.style.display = '';
+			overlay.style.visibility = 'hidden';
+			saved_parent.insertBefore(w.workspace, null);
 			w.$.set_style(w.workspace, default_workspace_style);
 			restore_size();
+			var node;
+			while (node = show_me.pop()) {
+				node.style.display = '';
+			}
 		} else {
+			var node = document.body.firstChild;
+			while (node = node.nextSibling) {
+				if (node !== overlay && node.style && !node.style.display) {
+					node.style.display = 'none';
+					show_me.push(node);
+				}
+			}
+			
 			w.resizer.style.display = 'none';
+			saved_parent = w.workspace.parentNode;
+			update_overlay();
+			overlay.style.visibility = 'visible';
+			overlay.insertBefore(w.workspace, null);
 			w.$.set_style(w.workspace, fullscreen_workspace_style);
 			store_size();
 			fullscreen();

@@ -347,7 +347,7 @@ Wysiwyg.prototype = {
 			w.initialized_plugins.push(p);
 		}
 
-		var top_panel_buttons = ['bold', '|', 'italic', '|', 'underline', '|', 'fontsize', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'setcolor', '|', 'fullscreen'];
+		var top_panel_buttons = ['bold', '|', 'italic', '|', 'underline', '|', 'fontsize', '|', 'justifyfull', '|', 'justifyleft', '|', 'justifyright', '|', 'justifycenter', '|', 'insertunorderedlist', '|', 'insertorderedlist', '|', 'setcolor', '|', 'fullscreen'];
 		if (w.options.admin_mode) {
 			top_panel_buttons.push('|');
 			top_panel_buttons.push('mode_switcher');

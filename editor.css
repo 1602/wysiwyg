@@ -148,7 +148,7 @@ noindex:-o-prefocus, .btns-top img {
 	list-style:none;
 	margin-left:200px;
 	padding-top:7px;
-	float: right;
+	/* float: right; */
 	margin-right: 10px;
 }
 .btns-top li {
@@ -320,6 +320,10 @@ a.bb-nonumberlist {
 	background:url(images/bb-top.gif) no-repeat center -138px;
 }
 a.bb-color {
+	background:url(images/bb-top.gif) no-repeat center -158px;
+	display:block;
+}
+a.bb-fullscreen {
 	background:url(images/bb-top.gif) no-repeat center -158px;
 	display:block;
 }

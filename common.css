@@ -13,13 +13,11 @@ body {
 	clear:both;
 }
 
-#overlay {
+#overlay, .overlay {
 	visibility: hidden;
 	position: absolute;
 	left: 0px;
 	top: 0px;
-	width:100%;
-	height:100%;
 	text-align:center;
 	z-index: 1000;
 	background-image:url(background-trans.png);
