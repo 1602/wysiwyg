@@ -3,7 +3,7 @@
 
 	function init_standart_action(action, image) {
 		return function (w) {
-			//this.image = image;
+			//this.anchorClass = image;
 			this.anchorClass = image;
 			this.action = action;
 			this.update = function (bel) {
@@ -149,7 +149,7 @@ Wysiwyg.prototype.plugins.setcolor = function (w) {
 };
 
 Wysiwyg.prototype.plugins.mode_switcher = function (w) {
-	this.image = 'bb-bold';
+	this.anchorClass = 'bb-bold';
 	this.command = 'show_source';
 	this.update = 'always_enabled';
 	this.action = function () {
@@ -159,7 +159,7 @@ Wysiwyg.prototype.plugins.mode_switcher = function (w) {
 
 Wysiwyg.prototype.plugins.link = function (w) {
 	var self = this;
-	this.image = 'bb-link';
+	this.anchorClass = 'bb-link';
 	this.command = 'createlink';
 	function show_linkcreator(linkNode, callback) {
 		var div = document.createElement('div');
@@ -213,7 +213,7 @@ Wysiwyg.prototype.plugins.link = function (w) {
 
 Wysiwyg.prototype.plugins.quote = function (w) {
 	var self = this;
-	this.image = 'bb-quote';
+	this.anchorClass = 'bb-quote';
 	this.command = 'quote';
 	this.action = function () {
 		var quote = w.selection.filter('blockquote');
@@ -262,7 +262,7 @@ Wysiwyg.prototype.plugins.quote = function (w) {
 };
 
 Wysiwyg.prototype.plugins.spoiler = function (w) {
-	this.image = 'bb-spoiler';
+	this.anchorClass = 'bb-spoiler';
 	this.command = 'spoiler';
 	this.action = function () {
 		var spoiler = w.selection.filter('.spoiler');
@@ -298,7 +298,7 @@ Wysiwyg.prototype.plugins.spoiler = function (w) {
 };
 
 Wysiwyg.prototype.plugins.hide = function (w) {
-	this.image = 'bb-hide';
+	this.anchorClass = 'bb-hide';
 	this.command = 'hide';
 	this.update = '.bb-hide';
 	function show_hidecreator(hideNode, callback) {
@@ -353,7 +353,7 @@ Wysiwyg.prototype.plugins.hide = function (w) {
 };
 
 Wysiwyg.prototype.plugins.code = function (w) {
-	this.image = 'bb-code';
+	this.anchorClass = 'bb-code';
 	this.command = 'code';
 	this.action = function () {
 		var code = w.selection.filter('.bb-code');
@@ -374,7 +374,7 @@ Wysiwyg.prototype.plugins.code = function (w) {
 };
 
 Wysiwyg.prototype.plugins.smile = function (w) {
-	this.image = 'bb-smile';
+	this.anchorClass = 'bb-smile';
 	this.command = 'smile';
 	this.action = function () {
 		var div = w.$.create_top('div');
@@ -436,7 +436,7 @@ Wysiwyg.prototype.plugins.smile = function (w) {
 };
 
 Wysiwyg.prototype.plugins.media = function (w) {
-	this.image = 'bb-media';
+	this.anchorClass = 'bb-media';
 	this.command = 'media';
 	function show_media_dialog(callback) {
 		var div = document.createElement('div');
@@ -467,12 +467,12 @@ Wysiwyg.prototype.plugins.media = function (w) {
 };
 
 Wysiwyg.prototype.plugins.undo = function (w) {
-	this.image = 'bb-prev';
+	this.anchorClass = 'bb-prev';
 	this.action = 'undo';
 };
 
 Wysiwyg.prototype.plugins.redo = function (w) {
-	this.image = 'bb-next';
+	this.anchorClass = 'bb-next';
 	this.action = 'redo';
 };
 

@@ -7,6 +7,7 @@ function Wysiwyg(textarea, options) {
 	options.max_width = options.max_width || 1024;
 	options.min_height = options.min_height || 315;
 	options.max_height = options.max_height || 768;
+	options.show_media_panel = options.show_media_panel || true;
 
 	this.options = options;
 
@@ -115,9 +116,11 @@ function Wysiwyg(textarea, options) {
 	};
 
 	// btns-left
-	var left_btns = $.create_top('div', 'btns-left', editor);
-	this.btns_big = $.create_top('div', 'btns-big', left_btns);
-	this.btns_small = $.create_top('div', 'btns-small', left_btns);
+	if (options.show_media_panel) {
+		var left_btns = $.create_top('div', 'btns-left', editor);
+		this.btns_big = $.create_top('div', 'btns-big', left_btns);
+		this.btns_small = $.create_top('div', 'btns-small', left_btns);
+	}
 
 	// textplace
 	var textplace = $.create_top('div', 'textplace', editor);
@@ -141,9 +144,6 @@ function Wysiwyg(textarea, options) {
 	textarea.parentNode.insertBefore(this.workspace, textarea.nextSibling);
 
 	var styles = {
-		source: {
-			display: 'none'
-		},
 		iframe: {
 			zIndex: 1,
 			border: '0'
@@ -227,13 +227,29 @@ function Wysiwyg(textarea, options) {
 	var ul_width = 0;
 	while (li) {
 		ul_width += li.offsetWidth;
+		if (li.className === 'editor-separator') {
+			ul_width += 18;
+		}
 		li = li.nextSibling;
 	}
-	var new_min_width = 434 + ul_width;
+	var new_min_width = 234 + ul_width;
+	var delta = 0;
 	if (this.options.min_width < new_min_width) {
+		delta = new_min_width - this.options.min_width;
+		// set new width
 		this.options.min_width = new_min_width;
 		editor.style.width = this.options.min_width + 'px';
 	}
+	
+	if (!options.show_media_panel) {
+		delta += 107;
+	}
+	
+	// fix editor width
+	this.tp.style.width = this.tp.offsetWidth + delta + 'px';
+	this.iframe.style.width = this.iframe.offsetWidth + delta - 20 + 'px';
+	this.source.style.width = this.source.offsetWidth + delta - 20 + 'px';
+	this.source.style.display = 'none';
 }
 
 Wysiwyg.prototype = {

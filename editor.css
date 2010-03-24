@@ -327,6 +327,14 @@ a.bb-fullscreen {
 	background:url(images/bb-top.gif) no-repeat center -158px;
 	display:block;
 }
+
+/* left buttons */
+/* todo: implement me */
+a.bb-quote, a.bb-hide, a.bb-spoiler, a.bb-code, a.bb-smile, a.bb-media, a.bb-prev, a.bb-next {
+	height: 20px;
+	background:url(images/bb-top.gif) no-repeat center 1px;
+}
+
 .textplace {
 	float:right;
 	width:546px;
