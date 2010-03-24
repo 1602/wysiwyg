@@ -328,7 +328,7 @@ Wysiwyg.prototype = {
 				p.init(button_holder);
 			} else {
 				button.onclick = function (e) {
-					if (w.$.has_class(button_holder, 'disabled')) {
+					if (button_holder.className === 'disabled') {
 						return false;
 					}
 					if (typeof p.action === 'function') {
