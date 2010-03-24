@@ -265,7 +265,7 @@ Wysiwyg.prototype = {
 					continue;
 				}
 				if (source_mode) {
-					if (p.command === 'show_source') {
+					if (p.command === 'show_source' || p.anchorClass === 'bb-fullscreen') {
 						self.$.remove_class(bel, 'disabled');
 					} else {
 						self.$.add_class(bel, 'disabled');

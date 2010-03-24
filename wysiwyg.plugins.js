@@ -477,6 +477,7 @@ Wysiwyg.prototype.plugins.redo = function (w) {
 };
 
 Wysiwyg.prototype.plugins.fullscreen = function (w) {
+	var FULLSCREEN_PADDING = 20;
 	var self = this;
 	this.anchorClass = 'bb-fullscreen';
 	
@@ -493,8 +494,6 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 		position: 'absolute',
 		left: 0,
 		top: 0,
-		width: '100%',
-		height: '100%',
 		background: '#fff'
 	};
 	
@@ -504,15 +503,6 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 	overlay.className = 'overlay';
 
 	document.body.appendChild(overlay);
-
-	function update_overlay() {
-		var scroll = w.$.calc_scroll();
-		var bounds = w.$.calc_screen_bounds();
-		overlay.style.top = scroll.y + 'px';
-		overlay.style.left = scroll.x + 'px';
-		overlay.style.width = bounds.w - 20 + 'px';
-		overlay.style.height = bounds.h + 'px';
-	}
 
 	function store_size() {
 		dim.edw = w.workspace.firstChild.offsetWidth;
@@ -533,6 +523,10 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 	}
 	
 	function fullscreen() {
+		var bounds = w.$.calc_screen_bounds();
+		w.workspace.style.width = bounds.w - 60 + 'px';
+		w.workspace.style.height = bounds.h - 40 + 'px';
+		w.workspace.style.padding = '10px';
 		var dw = w.workspace.offsetWidth - w.workspace.firstChild.offsetWidth - 2;
 		var dh = w.workspace.offsetHeight - w.workspace.firstChild.offsetHeight - 22;
 		w.workspace.firstChild.style.width = w.workspace.firstChild.offsetWidth + dw + 'px';
@@ -543,45 +537,36 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 		w.iframe.style.height = w.iframe.offsetHeight + dh + 2 + 'px';
 	}
 	
-	var saved_parent = null;
-	var show_me = [];
 	function adjust_size() {
 		if (!w.fullscreen) {
 			w.resizer.style.display = '';
 			overlay.style.visibility = 'hidden';
-			saved_parent.insertBefore(w.workspace, null);
 			w.$.set_style(w.workspace, default_workspace_style);
 			restore_size();
-			var node;
-			while (node = show_me.pop()) {
-				node.style.display = '';
-			}
 		} else {
-			var node = document.body.firstChild;
-			while (node = node.nextSibling) {
-				if (node !== overlay && node.style && !node.style.display) {
-					node.style.display = 'none';
-					show_me.push(node);
-				}
-			}
-			
 			w.resizer.style.display = 'none';
-			saved_parent = w.workspace.parentNode;
-			update_overlay();
-			overlay.style.visibility = 'visible';
-			overlay.insertBefore(w.workspace, null);
 			w.$.set_style(w.workspace, fullscreen_workspace_style);
+			var offset = w.$.get_offset(w.workspace);
+			w.workspace.style.top = -1 * offset.top + 'px';
+			w.workspace.style.left = -1 * offset.left + 'px';
+			window.scrollTo(0, 0);
 			store_size();
 			fullscreen();
 		}
+	}
+	
+	function scroll() {
+		window.scrollTo(0, 0);
 	}
 	
 	function switch_mode() {
 		w.fullscreen = !w.fullscreen;
 		if (w.fullscreen) {
 			w.$.add_event(window, 'resize', fullscreen);
+			w.$.add_event(window, 'scroll', scroll);
 		} else {
 			w.$.remove_event(window, 'resize', fullscreen);
+			w.$.remove_event(window, 'scroll', scroll);
 		}
 	}
 	
@@ -589,4 +574,6 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 		switch_mode();
 		adjust_size();
 	};
+	
+	this.update = function(){return true};
 };

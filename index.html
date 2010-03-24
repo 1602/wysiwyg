@@ -18,7 +18,7 @@
 	window.onload = function () {
 		try {
 			wysiwyg = new Wysiwyg(document.getElementById('text'), {
-				admin_mode: false
+				admin_mode: true
 			});
 		} catch(e) {
 			console.log(e);
@@ -34,7 +34,9 @@
 Quisque <b>lectus</b> augue, <i>egestas</i> eget <u>consequat</u> faucibus, pharetra eu leo. Quisque libero augue, volutpat gravida lobortis non, accumsan sit amet metus. Phasellus consectetur ante in dolor lobortis gravida.
 </p>
 <input type="button" onclick="wysiwyg.insert_quote('author', 'originalcontent'); return false" value="Quote" />
-
+<div style="height:1000px">
+</div>
+<div style="position: relative">
 <form action="">
 
 <textarea id="text" cols="80" rows="30">
@@ -94,6 +96,7 @@ Quisque <b>lectus</b> augue, <i>egestas</i> eget <u>consequat</u> faucibus, phar
 
 </form>
 
+</div>
 <div id="preview"></div>
 
 </body>

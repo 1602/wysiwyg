@@ -165,6 +165,15 @@ Util.prototype = {
 		var b = this.calc_screen_bounds();
 		return {minX: 0, minY: 0, maxX: b.w - el.offsetWidth - 20, maxY: b.h - el.offsetHeight};
 	},
+	get_offset: function (el) {
+		var offset = {top: 0, left: 0};
+		while (el) {
+			offset.top += el.offsetTop;
+			offset.left += el.offsetLeft;
+			el = el.offsetParent;
+		}
+		return offset;
+	},
 	is_empty_node: function (n) {
 		if (n.nodeType === 1) {
 			return this.regExp.textNodes.test(n.nodeName) ? this.trim(n.nodeValue).length === 0 : false;
