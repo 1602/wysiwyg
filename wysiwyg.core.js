@@ -417,12 +417,23 @@ Wysiwyg.prototype = {
 		}
 		var overlay = document.createElement('div');
 		overlay.id = 'overlay';
-		var scroll = $.calc_scroll();
 		var bounds = $.calc_screen_bounds();
-		overlay.style.top = scroll.y + 'px';
-		overlay.style.left = scroll.x + 'px';
+		overlay.style.position = $.ie6 ? 'absolute' : 'fixed';
 		overlay.style.width = bounds.w - 20 + 'px';
 		overlay.style.height = bounds.h + 'px';
+
+		if ($.ie6) {
+			var scroll = function () {
+				var s = $.calc_scroll();
+				overlay.style.top = s.y + 'px';
+				overlay.style.left = s.x + 'px';
+			};
+			window.onscroll = scroll;
+			scroll();
+		} else {
+			overlay.style.top = 0;
+			overlay.style.left = 0;
+		}
 
 		document.body.appendChild(overlay);
 
@@ -495,6 +506,9 @@ Wysiwyg.prototype = {
 		btn_cancel.innerHTML = 'Cancel';
 		btn_cancel.onclick = function () {
 			overlay.parentNode.removeChild(overlay);
+			if ($.ie6) {
+				window.onscroll = null;
+			}
 		};
 
 		var btn_ok = $.create_top('button');
@@ -509,6 +523,9 @@ Wysiwyg.prototype = {
 			}
 			overlay.parentNode.removeChild(overlay);
 
+			if ($.ie6) {
+				window.onscroll = null;
+			}
 			self.text_modified();
 		};
 

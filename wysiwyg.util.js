@@ -12,6 +12,7 @@ function Util(wysiwyg) {
 		mozilla: /mozilla/.test(user_agent) && !/(compatible|webkit)/.test(user_agent)
 	};
 
+	this.ie6 = parseInt(this.browser.version, 10) == 6 && this.browser.msie;
 	function create_element(nodeName, class_name, parent_node) {
 		var node = this.createElement(nodeName);
 		if (class_name) {
