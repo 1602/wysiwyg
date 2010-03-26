@@ -326,6 +326,7 @@ a.bb-color {
 a.bb-fullscreen {
 	background:url(images/bb-top.gif) no-repeat center -158px;
 	display:block;
+	height: 20px;
 }
 
 /* left buttons */

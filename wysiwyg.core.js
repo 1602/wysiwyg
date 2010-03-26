@@ -50,14 +50,16 @@ function Wysiwyg(textarea, options) {
 				var w = ip.w + dx;
 				if (options.min_width <= w && w <= options.max_width) {
 					editor.style.width = w + 'px';
-					self.iframe.style.width = ip.ew + dx + 'px';
-					self.tp.style.width = ip.tw + dx + 'px';
+					self.adjust_editor_area_size();
+					//self.iframe.style.width = ip.ew + dx + 'px';
+					//self.tp.style.width = ip.tw + dx + 'px';
 					//self.controls.style.width = ip.cw + e.clientX - ip.x + 'px';
 				}
 				if (options.min_height <= h && h <= options.max_height) {
 					editor.style.height = h + 'px';
-					self.iframe.style.height = ip.eh + dy + 'px';
-					self.tp.style.height = ip.th + dy + 'px';
+					self.adjust_editor_area_size();
+					//self.iframe.style.height = ip.eh + dy + 'px';
+					//self.tp.style.height = ip.th + dy + 'px';
 				}
 			}
 
@@ -89,7 +91,7 @@ function Wysiwyg(textarea, options) {
 
 	// stretch (resizer)
 	var editor_stretch = $.create_top('div', 'editor-stretch', editor);
-	editor_stretch.innerHTML = '<a title="растянуть" href="#"><img alt="растянуть" src="images/stretch.gif"/></a>';
+	editor_stretch.innerHTML = '<a title="растянуть" href="#"><img alt="растянуть" src="/js/editor/images/stretch.gif"/></a>';
 	resizer(editor_stretch);
 
 	// top controls (with logo and rounded corners)
@@ -102,7 +104,7 @@ function Wysiwyg(textarea, options) {
 	var hideandshow_div = $.create_top('div', 'hideandshow', editor);
 	var hideandshow_link = $.create_top('a', false, hideandshow_div);
 	hideandshow_link.href = "#";
-	hideandshow_link.innerHTML = '<img title="" alt="" src="/js/editor/images/hide.gif" style="display: none;" /><img title="" alt="" src="/js/editor/images/show.gif" />';
+	hideandshow_link.innerHTML = '<img title="" alt="show" src="/js/editor/images/hide.gif" style="display: none;" /><img title="" alt="hide" src="/js/editor/images/show.gif" />';
 	hideandshow_link.onclick = function () {
 		$.each([
 			self.controls.style,
@@ -111,7 +113,7 @@ function Wysiwyg(textarea, options) {
 		], function (i, s) {
 			s.display = s.display ? '' : 'none';
 		});
-		// todo: resize textarea/iframe
+		self.adjust_editor_area_size();
 		return false;
 	};
 
@@ -240,7 +242,7 @@ function Wysiwyg(textarea, options) {
 		this.options.min_width = new_min_width;
 		editor.style.width = this.options.min_width + 'px';
 	}
-	
+	/* 
 	if (!options.show_media_panel) {
 		delta += 107;
 	}
@@ -248,7 +250,8 @@ function Wysiwyg(textarea, options) {
 	// fix editor width
 	this.tp.style.width = this.tp.offsetWidth + delta + 'px';
 	this.iframe.style.width = this.iframe.offsetWidth + delta - 20 + 'px';
-	this.source.style.width = this.source.offsetWidth + delta - 20 + 'px';
+	this.source.style.width = this.source.offsetWidth + delta - 20 + 'px'; */
+	this.adjust_editor_area_size();
 	this.source.style.display = 'none';
 }
 
@@ -550,5 +553,24 @@ Wysiwyg.prototype = {
 		this.text_modified_timeout = setTimeout(function () {
 			self.update_textarea();
 		}, 500);
+	},
+	adjust_editor_area_size: function () {
+		var editor_width = this.workspace.firstChild.offsetWidth,
+			editor_height = this.workspace.firstChild.offsetHeight,
+			delta_x = this.options.show_media_panel ? 107 + 22 : 22,
+			// todo: make this working
+			delta_y = this.controls.style.display === 'none' ? 97: 97,
+			textplace_width = editor_width - delta_x,
+			textplace_height = editor_height - delta_y,
+			edit_area_width = textplace_width - 22,
+			edit_area_height = textplace_height - 22;
+
+		this.tp.style.width = textplace_width + 'px';
+		this.iframe.style.width = edit_area_width + 'px';
+		this.source.style.width = edit_area_width + 'px';
+
+		this.tp.style.height = textplace_height + 'px';
+		this.iframe.style.height = edit_area_height + 'px';
+		this.source.style.height = edit_area_height + 'px';
 	}
 };

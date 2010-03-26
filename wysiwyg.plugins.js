@@ -516,12 +516,9 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 	function restore_size() {
 		w.workspace.firstChild.style.width = dim.edw + 'px';
 		w.workspace.firstChild.style.height = dim.edh + 'px';
-		w.tp.style.width = dim.tpw + 2 + 'px';
-		w.tp.style.height = dim.tph + 'px';
-		w.iframe.style.width = dim.ifw - 18 + 'px';
-		w.iframe.style.height = dim.ifh + 2 + 'px';
+		w.adjust_editor_area_size();
 	}
-	
+
 	function fullscreen() {
 		var bounds = w.$.calc_screen_bounds();
 		w.workspace.style.width = bounds.w - 60 + 'px';
@@ -531,12 +528,9 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 		var dh = w.workspace.offsetHeight - w.workspace.firstChild.offsetHeight - 22;
 		w.workspace.firstChild.style.width = w.workspace.firstChild.offsetWidth + dw + 'px';
 		w.workspace.firstChild.style.height = w.workspace.firstChild.offsetHeight + dh + 'px';
-		w.tp.style.width = w.tp.offsetWidth + dw + 2 + 'px';
-		w.tp.style.height = w.tp.offsetHeight + dh + 'px';
-		w.iframe.style.width = w.iframe.offsetWidth + dw - 18 + 'px';
-		w.iframe.style.height = w.iframe.offsetHeight + dh + 2 + 'px';
+		w.adjust_editor_area_size();
 	}
-	
+
 	function adjust_size() {
 		if (!w.fullscreen) {
 			w.resizer.style.display = '';
@@ -554,11 +548,11 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 			fullscreen();
 		}
 	}
-	
+
 	function scroll() {
 		window.scrollTo(0, 0);
 	}
-	
+
 	function switch_mode() {
 		w.fullscreen = !w.fullscreen;
 		if (w.fullscreen) {
@@ -569,11 +563,11 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 			w.$.remove_event(window, 'scroll', scroll);
 		}
 	}
-	
+
 	this.action = function () {
 		switch_mode();
 		adjust_size();
 	};
-	
+
 	this.update = function(){return true};
 };
