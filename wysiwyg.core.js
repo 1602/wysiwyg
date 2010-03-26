@@ -422,8 +422,8 @@ Wysiwyg.prototype = {
 		overlay.id = 'overlay';
 		var bounds = $.calc_screen_bounds();
 		overlay.style.position = $.ie6 ? 'absolute' : 'fixed';
-		overlay.style.width = bounds.w - 20 + 'px';
-		overlay.style.height = bounds.h + 'px';
+		overlay.style.width = '100%';
+		overlay.style.height = '100%';
 
 		if ($.ie6) {
 			var scroll = function () {
@@ -494,6 +494,15 @@ Wysiwyg.prototype = {
 			};
 			return false;
 		};
+		
+		var fix_position_after_resize = function (e) {
+			var x = parseInt(dialog_wrapper.style.left, 10);
+			var y = parseInt(dialog_wrapper.style.top, 10);
+			var bounds = self.$.calc_drag_bounds(dialog_wrapper);
+			dialog_wrapper.style.left = Math.min(x, bounds.maxX) + 'px';
+			dialog_wrapper.style.top = Math.min(y, bounds.maxY) + 'px';
+		};
+		window.onresize = fix_position_after_resize;
 
 		var descr_div = document.createElement('div');
 		$.add_class(descr_div, 'modaldescr');
@@ -505,14 +514,17 @@ Wysiwyg.prototype = {
 		$.add_class(footer, 'modalclose');
 		dialog.appendChild(footer);
 
-		var btn_cancel = $.create_top('button');
-		btn_cancel.innerHTML = 'Cancel';
-		btn_cancel.onclick = function () {
+		function destroy_overlay() {
 			overlay.parentNode.removeChild(overlay);
 			if ($.ie6) {
 				window.onscroll = null;
 			}
-		};
+			window.onresize = null;
+		}
+
+		var btn_cancel = $.create_top('button');
+		btn_cancel.innerHTML = 'Cancel';
+		btn_cancel.onclick = destroy_overlay;
 
 		var btn_ok = $.create_top('button');
 		btn_ok.innerHTML = 'OK';
@@ -524,11 +536,7 @@ Wysiwyg.prototype = {
 			if (r === false) {
 				return false;
 			}
-			overlay.parentNode.removeChild(overlay);
-
-			if ($.ie6) {
-				window.onscroll = null;
-			}
+			destroy_overlay();
 			self.text_modified();
 		};
 

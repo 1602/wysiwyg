@@ -164,7 +164,20 @@ Util.prototype = {
 	},
 	calc_drag_bounds: function (el) {
 		var b = this.calc_screen_bounds();
-		return {minX: 0, minY: 0, maxX: b.w - el.offsetWidth - 20, maxY: b.h - el.offsetHeight};
+		// check vertical scrollbar
+		if (b.h < document.body.offsetHeight) {
+			b.w -= this.get_scrollbar_width();
+		}
+		// check horizontal scrollbar
+		if (b.w < document.body.offsetWidth) {
+			b.h -= this.get_scrollbar_width();
+		}
+		return {
+			minX: 0,
+			minY: 0,
+			maxX: Math.max(0, b.w - el.offsetWidth),
+			maxY: Math.max(0, b.h - el.offsetHeight)
+		};
 	},
 	get_offset: function (el) {
 		var offset = {top: 0, left: 0};
@@ -247,6 +260,33 @@ Util.prototype = {
 			node = node.parentNode;
 		}
 		return false;
+	},
+	get_scrollbar_width: function () {
+		if (this.scrollbar_width) return this.scrollbar_width;
+		var inner = document.createElement('p');
+		inner.style.width = "100%";
+		inner.style.height = "200px";
+
+		var outer = document.createElement('div');
+		outer.style.position = "absolute";
+		outer.style.top = "0px";
+		outer.style.left = "0px";
+		outer.style.visibility = "hidden";
+		outer.style.width = "200px";
+		outer.style.height = "150px";
+		outer.style.overflow = "hidden";
+		outer.appendChild (inner);
+
+		document.body.appendChild (outer);
+		var w1 = inner.offsetWidth;
+		outer.style.overflow = 'scroll';
+		var w2 = inner.offsetWidth;
+		if (w1 == w2) w2 = outer.clientWidth;
+
+		document.body.removeChild (outer);
+
+		this.scrollbar_width = w1 - w2;
+		return this.scroll_bar_width;
 	}
 };
 
