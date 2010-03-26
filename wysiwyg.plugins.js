@@ -86,6 +86,10 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 		}
 		w.win.focus();
 	};
+	this.update = function (button) {
+		w.$.remove_class(button, 'disabled');
+		button.lastChild.disabled = false;
+	};
 	this.init = function (element_holder) {
 		self.el = element_holder.lastChild;
 		w.$.add_event(self.el, 'change', function () {

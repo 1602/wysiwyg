@@ -286,8 +286,15 @@ Wysiwyg.prototype = {
 				if (source_mode) {
 					if (p.command === 'show_source' || p.anchorClass === 'bb-fullscreen') {
 						self.$.remove_class(bel, 'disabled');
+						if (bel.lastChild.nodeName == 'SELECT') {
+							bel.lastChild.disabled = false;
+						}
 					} else {
 						self.$.add_class(bel, 'disabled');
+						if (bel.lastChild.nodeName == 'SELECT') {
+							console.log(bel.lastChild.nodeName);
+							bel.lastChild.disabled = true;
+						}
 					}
 					self.$.remove_class(bel, 'click');
 					continue;
