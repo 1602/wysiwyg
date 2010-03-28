@@ -184,6 +184,11 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 			w.win.focus();
 		}, properties);
 	};
+	w.register_attribute('src');
+	w.register_attribute('align');
+	w.register_attribute('border');
+	w.register_attribute('alt');
+	w.register_attribute('href');
 	this.update = '<IMG>';
 	this.html = '<a class="bb-file" href="#">+ Файл</a>';
 	// todo: make default action instead of this

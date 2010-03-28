@@ -96,6 +96,17 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 			self.action(self.el.options[self.el.selectedIndex].value);
 		});
 	};
+	w.register_attribute('class', 'bb-font-size');
+	w.register_style('font-size', function (value) {
+		value = parseInt(value);
+		if (value > 20) {
+			value = 20;
+		}
+		if (value < 11) {
+			value = 11;
+		}
+		return value + 'px';
+	});
 };
 
 Wysiwyg.prototype.plugins.setcolor = function (w) {
@@ -165,6 +176,7 @@ Wysiwyg.prototype.plugins.link = function (w) {
 	var self = this;
 	this.anchorClass = 'bb-link';
 	this.command = 'createlink';
+	w.register_attribute('href');
 	function show_linkcreator(linkNode, callback) {
 		var div = document.createElement('div');
 		div.innerHTML = '<form><div class="modal-type">Адрес ссылки:</div>' +
@@ -268,6 +280,7 @@ Wysiwyg.prototype.plugins.quote = function (w) {
 Wysiwyg.prototype.plugins.spoiler = function (w) {
 	this.anchorClass = 'bb-spoiler';
 	this.command = 'spoiler';
+	w.register_attribute('class', ['spoiler', 'toggler', 'hidden_text']);
 	this.action = function () {
 		var spoiler = w.selection.filter('.spoiler');
 		if (!spoiler) {
@@ -275,7 +288,7 @@ Wysiwyg.prototype.plugins.spoiler = function (w) {
 
 			var toggler = w.$.create('div', 'toggler', spoiler);
 			toggler.innerHTML = '&nbsp;';
-			toggler.setAttribute('onclick', 'var s = this.nextSibling.style; s.display = s.display ? \'none\' : \'\'; return false; ');
+			//toggler.setAttribute('onclick', 'var s = this.nextSibling.style; s.display = s.display ? \'none\' : \'\'; return false; ');
 
 			var hidden_text = w.$.create('div', 'hidden_text', spoiler);
 
@@ -353,6 +366,8 @@ Wysiwyg.prototype.plugins.hide = function (w) {
 		});
 		w.win.focus();
 	};
+	w.register_attribute('value');
+	w.register_attribute('class', 'bb-hide');
 	this.panel = 'btns_small';
 };
 
@@ -375,6 +390,7 @@ Wysiwyg.prototype.plugins.code = function (w) {
 	};
 	this.panel = 'btns_small';
 	this.update = '.bb-code';
+	w.register_attribute('class', 'bb-code');
 };
 
 Wysiwyg.prototype.plugins.smile = function (w) {
@@ -468,6 +484,7 @@ Wysiwyg.prototype.plugins.media = function (w) {
 		}
 	};
 	this.panel = 'btns_small';
+	w.register_attribute('class', 'bb-media');
 };
 
 Wysiwyg.prototype.plugins.undo = function (w) {

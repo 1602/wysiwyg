@@ -108,7 +108,7 @@ Util.prototype = {
 		for (i = 0, len = events.length; i < len; i++) {
 			var event = events[i];
 			if (element.attachEvent) {
-				element.attachEvent(event, callback);
+				element.attachEvent('on' + event, callback);
 			} else {
 				element.addEventListener(event, callback, false);
 			}
@@ -116,7 +116,7 @@ Util.prototype = {
 	},
 	remove_event: function (element, event, callback) {
 		if (element.detachEvent) {
-			element.detachEvent(event, callback);
+			element.detachEvent('on' + event, callback);
 		} else {
 			element.removeEventListener(event, callback, false);
 		}

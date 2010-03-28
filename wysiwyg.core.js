@@ -165,6 +165,7 @@ function Wysiwyg(textarea, options) {
 	this.doc.open();
 	this.doc.write(html);
 	this.doc.close();
+	this.doc.onpaste = function () { alert('paste detected')};
 	if (!this.doc.body.firstChild) {
 		this.doc.body.appendChild(this.doc.createElement('br'));
 	}
@@ -183,6 +184,7 @@ function Wysiwyg(textarea, options) {
 
 	this.win.focus();
 
+	// shift+enter for msie
 	if ($.browser.msie) {
 		this.doc.onkeydown = function () {
 			if (self.win.event.keyCode === 13 && self.selection.filter('.spoiler')) {
@@ -193,6 +195,7 @@ function Wysiwyg(textarea, options) {
 		};
 	}
 
+	// shift+enter for opera
 	$.add_event(this.doc, 'keydown', function (e) {
 		/* if ($.browser.safari && e.keyCode === 13) {
 			if (e.shiftKey || !self.dom.parent(self.selection.getNode(), /^(P|LI)$/)) {
@@ -209,6 +212,34 @@ function Wysiwyg(textarea, options) {
 		self.text_modified();
 	});
 
+	// hook onpaste event for ie
+	if ($.browser.msie || $.browser.opera) {
+		// listen for ctrl+v
+		$.add_event(this.doc, 'keydown', function (e) {
+			if (e.ctrlKey && e.keyCode == 86) {
+				self.clean_html();
+			}
+		});
+		// disable rightclick
+		$.add_event(this.doc, 'mousedown', function (e) {
+			e = e || self.win.event;
+			if (e.button == 2 || e.button == 3) {
+				if ($.browser.opera) {
+					alert('Опция отключена для браузера Opera. Для вставки текста используйте ctrl+v');
+				}
+				return false;
+			}
+		});
+		$.add_event(this.doc, 'contextmenu', function () {
+			return false;
+		});
+	// hook onpaste event for normal browsers (webkit, ff)
+	} else {
+		$.add_event(this.doc, 'paste', function () {
+			self.clean_html();
+		});
+	}
+	
 	$.add_event(this.doc, 'keyup mouseup', function (e) {
 		if (e.type === 'mouseup' || e.ctrlKey || e.metaKey ||
 			(e.keyCode >= 8 && e.keyCode <= 13) ||
@@ -220,9 +251,10 @@ function Wysiwyg(textarea, options) {
 	});
 
 	this.init_controls();
+	this.clean_html();
 	this.win.focus();
 	this.update_controls();
-	
+
 	// adjust min height
 	var top_panel_ul = this.controls.lastChild;
 	var li = top_panel_ul.firstChild;
@@ -242,15 +274,7 @@ function Wysiwyg(textarea, options) {
 		this.options.min_width = new_min_width;
 		editor.style.width = this.options.min_width + 'px';
 	}
-	/* 
-	if (!options.show_media_panel) {
-		delta += 107;
-	}
-	
-	// fix editor width
-	this.tp.style.width = this.tp.offsetWidth + delta + 'px';
-	this.iframe.style.width = this.iframe.offsetWidth + delta - 20 + 'px';
-	this.source.style.width = this.source.offsetWidth + delta - 20 + 'px'; */
+
 	this.adjust_editor_area_size();
 	this.source.style.display = 'none';
 }
@@ -405,12 +429,14 @@ Wysiwyg.prototype = {
 		if (!this.mode || this.mode === 'design') {
 			iframe.style.display = 'none';
 			this.source.style.display = '';
+			this.clean_html();
 			this.source.value = this.doc.body.innerHTML;
 			this.mode = 'text';
 		} else {
 			iframe.style.display = '';
 			this.source.style.display = 'none';
 			this.doc.body.innerHTML = this.source.value;
+			this.clean_html();
 			try {
 				//iframe.contentWindow.document.execCommand("useCSS", false, true);
 			} catch (e) {
@@ -587,5 +613,95 @@ Wysiwyg.prototype = {
 		this.tp.style.height = textplace_height + 'px';
 		this.iframe.style.height = edit_area_height + 'px';
 		this.source.style.height = edit_area_height + 'px';
+	},
+	clean_html: function () {
+		var self = this;
+		var html = this.doc.body.innerHTML;
+		// Remove comments [SF BUG-1481861].
+		html = html.replace(/<\!--[\s\S]*?-->/g, '' ) ;
+
+		html = html.replace(/<o:p>\s*<\/o:p>/g, '') ;
+		html = html.replace(/<o:p>[\s\S]*?<\/o:p>/g, '&nbsp;') ;
+
+		// Remove mso-xxx styles.
+		html = html.replace( /\s*mso-[^:]+:[^;"]+;?/gi, '' ) ;
+
+		// Remove margin styles.
+		html = html.replace( /\s*MARGIN: 0(?:cm|in) 0(?:cm|in) 0pt\s*;/gi, '' ) ;
+		html = html.replace( /\s*MARGIN: 0(?:cm|in) 0(?:cm|in) 0pt\s*"/gi, "\"" ) ;
+
+		html = html.replace( /\s*TEXT-INDENT: 0cm\s*;/gi, '' ) ;
+		html = html.replace( /\s*TEXT-INDENT: 0cm\s*"/gi, "\"" ) ;
+
+		html = html.replace( /\s*TEXT-ALIGN: [^\s;]+;?"/gi, "\"" ) ;
+
+		html = html.replace( /\s*PAGE-BREAK-BEFORE: [^\s;]+;?"/gi, "\"" ) ;
+
+		html = html.replace( /\s*FONT-VARIANT: [^\s;]+;?"/gi, "\"" ) ;
+
+		html = html.replace( /\s*tab-stops:[^;"]*;?/gi, '' ) ;
+		html = html.replace( /\s*tab-stops:[^"]*/gi, '' ) ;
+
+		html = html.replace( /<([a-z][a-z0-9]*)\s*(.*?)>/gi, function (whole, tagname, attrs) {
+			attrs = attrs.replace(/([a-z]+)="([^"]*)"\s*/gi, function (attr, name, value) {
+				if (name === 'style') {
+					return self.check_registered_style(value);
+				}
+				return self.is_registered_attribute(name, value) ? ' ' + name + '="' + value + '"' : '';
+			});
+			return '<' + tagname + attrs + '>';
+		});
+		this.doc.body.innerHTML = html;
+	},
+	register_attribute: function (attr, values) {
+		var self = this;
+		if (!this.registered_attributes) {
+			this.registered_attributes = {};
+		}
+		values = values || true;
+		if (!this.$.is_array(values)) {
+			values = [values];
+		}
+		if (!this.registered_attributes[attr]) {
+			this.registered_attributes[attr] = [];
+		}
+		this.$.each(values, function (i, value) {
+			self.registered_attributes[attr].push(value);
+		});
+		console.log(self.registered_attributes);
+	},
+	is_registered_attribute: function (name, value) {
+		if (!this.registered_attributes || !this.registered_attributes[name]) {
+			return false;
+		}
+		return true;
+	},
+	register_style: function (property, rule) {
+		var self = this;
+		if (!this.registered_styles) {
+			this.registered_styles = {};
+		}
+		this.registered_styles[property] = rule || true;
+	},
+	check_registered_style: function (rules) {
+		var self = this;
+		if (!self.registered_styles) {
+			return false;
+		}
+		rules = rules.split(/\s*;\s*/);
+		var result_rules = [];
+		this.$.each(rules, function (i, rule) {
+			rule = split(':', rule);
+			var property = this.$.trim(rule[0]);
+			var value = this.$.trim(rule[1]);
+			if (self.registered_styles[property]) {
+				if (typeof self.registered_styles[property] === 'function') {
+					result_rules.push(property + ': ' + self.registered_styles[property](value));
+				} else {
+					result_rules.push(property + ': ' + value);
+				}
+			}
+		});
+		return result_rules.join(';');
 	}
 };
