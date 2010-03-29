@@ -252,6 +252,32 @@ function Wysiwyg(textarea, options) {
 		self.text_modified();
 	});
 
+	/* 
+	$.add_event(this.doc, 'mousedown', function (e) {
+		e = e || self.doc.event;
+		var t = e.target;
+		if (t.style.position !== 'absolute') {
+			t.style.position = 'absolute';
+		}
+		t._moz_resizing = false;
+		var ip = {};
+		ip.y = e.clientY;
+		ip.x = e.clientX;
+		var move = function (e) {
+			e = e || self.doc.event;
+			t.style.top = e.clientY - ip.y + 'px';
+			t.style.left = e.clientX - ip.x + 'px';
+		};
+		var up = function (e) {
+			$.remove_event(self.doc, 'mousemove', move);
+			$.remove_event(self.doc, 'mousemove', up);
+		};
+		$.add_event(self.doc, 'mousemove', move);
+		$.add_event(self.doc, 'mouseup', up);
+		return false;
+	});
+	 */
+
 	this.init_controls();
 	this.clean_html();
 	this.win.focus();
@@ -643,8 +669,11 @@ Wysiwyg.prototype = {
 		html = html.replace( /\s*tab-stops:[^;"]*;?/gi, '' ) ;
 		html = html.replace( /\s*tab-stops:[^"]*/gi, '' ) ;
 
+		html = html.replace( /<\/?font.*?>/gi, '');
+		//html = html.replace( /<\/?span.*?>/gi, '');
 		// Remove style, meta and link tags
 		html = html.replace( /<STYLE[^>]*>[\s\S]*?<\/STYLE[^>]*>/gi, '' ) ;
+		html = html.replace( /<TITLE[^>]*>[\s\S]*?<\/TITLE[^>]*>/gi, '' ) ;
 		html = html.replace( /<(?:META|LINK)[^>]*>\s*/gi, '' ) ;
 
 		// Remove empty styles.
@@ -653,7 +682,7 @@ Wysiwyg.prototype = {
 		html = html.replace( /<([a-z][a-z0-9]*)\s*(.*?)>/gi, function (whole, tagname, attrs) {
 			attrs = attrs.replace(/([a-z]+)="([^"]*)"\s*/gi, function (attr, name, value) {
 				if (name === 'style') {
-					return self.check_registered_style(value);
+					return ''; //self.check_registered_style(value);
 				}
 				return self.is_registered_attribute(name, value) ? ' ' + name + '="' + value + '"' : '';
 			});
@@ -681,7 +710,7 @@ Wysiwyg.prototype = {
 		if (!this.registered_attributes || !this.registered_attributes[name]) {
 			return false;
 		}
-		return true;
+		return this.$.in_array(value, this.registered_attributes[name]) !== -1;
 	},
 	register_style: function (property, rule) {
 		var self = this;
