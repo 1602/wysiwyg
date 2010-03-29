@@ -236,7 +236,9 @@ function Wysiwyg(textarea, options) {
 	// hook onpaste event for normal browsers (webkit, ff)
 	} else {
 		$.add_event(this.doc, 'paste', function () {
-			self.clean_html();
+			setTimeout(function () {
+				self.clean_html();
+			}, 100);
 		});
 	}
 	
@@ -316,7 +318,6 @@ Wysiwyg.prototype = {
 					} else {
 						self.$.add_class(bel, 'disabled');
 						if (bel.lastChild.nodeName == 'SELECT') {
-							console.log(bel.lastChild.nodeName);
 							bel.lastChild.disabled = true;
 						}
 					}
@@ -642,6 +643,13 @@ Wysiwyg.prototype = {
 		html = html.replace( /\s*tab-stops:[^;"]*;?/gi, '' ) ;
 		html = html.replace( /\s*tab-stops:[^"]*/gi, '' ) ;
 
+		// Remove style, meta and link tags
+		html = html.replace( /<STYLE[^>]*>[\s\S]*?<\/STYLE[^>]*>/gi, '' ) ;
+		html = html.replace( /<(?:META|LINK)[^>]*>\s*/gi, '' ) ;
+
+		// Remove empty styles.
+		html =  html.replace( /\s*style="\s*"/gi, '' ) ;
+
 		html = html.replace( /<([a-z][a-z0-9]*)\s*(.*?)>/gi, function (whole, tagname, attrs) {
 			attrs = attrs.replace(/([a-z]+)="([^"]*)"\s*/gi, function (attr, name, value) {
 				if (name === 'style') {
@@ -668,7 +676,6 @@ Wysiwyg.prototype = {
 		this.$.each(values, function (i, value) {
 			self.registered_attributes[attr].push(value);
 		});
-		console.log(self.registered_attributes);
 	},
 	is_registered_attribute: function (name, value) {
 		if (!this.registered_attributes || !this.registered_attributes[name]) {
@@ -691,9 +698,9 @@ Wysiwyg.prototype = {
 		rules = rules.split(/\s*;\s*/);
 		var result_rules = [];
 		this.$.each(rules, function (i, rule) {
-			rule = split(':', rule);
-			var property = this.$.trim(rule[0]);
-			var value = this.$.trim(rule[1]);
+			rule = rule.split(':');
+			var property = self.$.trim(rule[0]);
+			var value = self.$.trim(rule[1]);
 			if (self.registered_styles[property]) {
 				if (typeof self.registered_styles[property] === 'function') {
 					result_rules.push(property + ': ' + self.registered_styles[property](value));
