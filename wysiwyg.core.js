@@ -252,10 +252,10 @@ function Wysiwyg(textarea, options) {
 		self.text_modified();
 	});
 
-	/* 
+	/*
 	$.add_event(this.doc, 'mousedown', function (e) {
 		e = e || self.doc.event;
-		var t = e.target;
+		var t = e.srcElement || e.target;
 		if (t.style.position !== 'absolute') {
 			t.style.position = 'absolute';
 		}
@@ -276,7 +276,7 @@ function Wysiwyg(textarea, options) {
 		$.add_event(self.doc, 'mouseup', up);
 		return false;
 	});
-	 */
+	*/
 
 	this.init_controls();
 	this.clean_html();
@@ -682,7 +682,8 @@ Wysiwyg.prototype = {
 		html = html.replace( /<([a-z][a-z0-9]*)\s*(.*?)>/gi, function (whole, tagname, attrs) {
 			attrs = attrs.replace(/([a-z]+)="([^"]*)"\s*/gi, function (attr, name, value) {
 				if (name === 'style') {
-					return ''; //self.check_registered_style(value);
+					var s = self.check_registered_style(value);
+					return s ? ' style="' + s + '"' : '';
 				}
 				return self.is_registered_attribute(name, value) ? ' ' + name + '="' + value + '"' : '';
 			});
