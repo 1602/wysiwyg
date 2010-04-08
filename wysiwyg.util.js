@@ -20,7 +20,7 @@ function Util(wysiwyg) {
 		}
 		if (parent_node) {
 			parent_node.appendChild(node);
-		}                         
+		}
 		return node;
 	}
 

@@ -165,7 +165,7 @@ function Wysiwyg(textarea, options) {
 	this.doc.open();
 	this.doc.write(html);
 	this.doc.close();
-	this.doc.onpaste = function () { alert('paste detected')};
+	//this.doc.onpaste = function () { alert('paste detected')};
 	if (!this.doc.body.firstChild) {
 		this.doc.body.appendChild(this.doc.createElement('br'));
 	}
