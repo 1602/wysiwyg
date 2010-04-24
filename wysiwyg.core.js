@@ -17,6 +17,7 @@ function Wysiwyg(textarea, options) {
 		$ = this.$;
 
 	this.workspace = $.create_top('div', 'secure_wysiwyg_editor');
+	this.workspace.style.padding = '20px';
 
 	function resizer(el) {
 		self.resizer = el;

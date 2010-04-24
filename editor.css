@@ -5,6 +5,7 @@
 	padding:10px 0;
 	border:1px solid #e1e1e1;
 	position:relative;
+	background: white;
 }
 *html .editor {
 	height:315px;

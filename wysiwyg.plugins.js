@@ -63,6 +63,7 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 		'</select>';
 	this.action = function (font_size) {
 		var span;
+		try {
 		if (w.selection.collapsed()) {
 			span = w.$.create('span', 'bb-font-size');
 			span.style.fontSize = font_size;
@@ -84,7 +85,49 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 				'class': 'bb-font-size'
 			}); */
 		}
+		} catch(e) {}
+		this.clean_spans();
 		w.win.focus();
+	};
+	function is_applicable(node) {
+		var count = 0;
+		for (var i = 0, len = node.childNodes.length; i < len; i++) {
+			var c = node.childNodes[i];
+			if (c.nodeType == 3) {
+				if (c.nodeValue.replace(/\s/, '') === '') {
+					continue;
+				} else {
+					return false;
+				}
+			}
+			if (c.nodeType == 1 && c.nodeName == 'SPAN' && c.className == 'bb-font-size') {
+				count += 1;
+			} else {
+				return false;
+			}
+		}
+		return count === 1;
+	}
+	this.clean_spans = function () {
+		var spans = w.doc.getElementsByTagName('span');
+		for (var i = 0, len = spans.length; i < len; i++) {
+			var span = spans[i];
+			if (span.className != 'bb-font-size') {
+				continue;
+			}
+			var has_child = false;
+			while (is_applicable(span)) {
+				span = span.firstChild.nextSibling || span.firstChild;
+				has_child = true;
+			}
+			if (has_child) {
+				spans[i].style.fontSize = span.style.fontSize;
+				spans[i].innerHTML = span.innerHTML;
+				this.clean_spans();
+				break;
+			}
+		}
+		//console.log(spans);
 	};
 	this.update = function (button) {
 		w.$.remove_class(button, 'disabled');
@@ -515,7 +558,8 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 		position: 'absolute',
 		left: 0,
 		top: 0,
-		background: '#fff'
+		background: '#fff',
+		zIndex: 2
 	};
 	
 	var dim = {};
@@ -552,6 +596,20 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 		w.adjust_editor_area_size();
 	}
 
+	var scroll_timeout = false;
+	function scroll() {
+		if (w.$.browser.msie || w.$.browser.opera || w.$.browser.mozilla) {
+			window.scrollTo(w.fix_scroll.x, w.fix_scroll.y);
+			return;
+		}
+		if (scroll_timeout) {
+			clearTimeout(scroll_timeout);
+		}
+		scroll_timeout = setTimeout(function () {
+			window.scrollTo(w.fix_scroll.x, w.fix_scroll.y);
+		}, 100);
+	}
+
 	function adjust_size() {
 		if (!w.fullscreen) {
 			w.resizer.style.display = '';
@@ -559,19 +617,27 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 			w.$.set_style(w.workspace, default_workspace_style);
 			restore_size();
 		} else {
+			w.fix_scroll = w.$.calc_scroll();
 			w.resizer.style.display = 'none';
 			w.$.set_style(w.workspace, fullscreen_workspace_style);
 			var offset = w.$.get_offset(w.workspace);
-			w.workspace.style.top = -1 * offset.top + 'px';
-			w.workspace.style.left = -1 * offset.left + 'px';
-			window.scrollTo(0, 0);
+			if (offset.top !== 0) { // has relative positioned element in his parents
+				w.workspace.style.top = w.fix_scroll.y - offset.top + 'px';
+				w.workspace.style.left = w.fix_scroll.x - offset.left + 'px';
+			} else { // normal position, just adjust scrolls
+				w.workspace.style.top = w.fix_scroll.y + 'px';
+				if (w.$.browser.msie) {
+					// strange msie behaviour
+					setTimeout(function () {
+						w.workspace.style.top = w.fix_scroll.y + 'px';
+					}, 500);
+				}
+				w.workspace.style.left = w.fix_scroll.x + 'px';
+			}
+			scroll();
 			store_size();
 			fullscreen();
 		}
-	}
-
-	function scroll() {
-		window.scrollTo(0, 0);
 	}
 
 	function switch_mode() {
