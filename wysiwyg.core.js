@@ -537,6 +537,8 @@ Wysiwyg.prototype = {
 			init_pos.y = e.clientY;
 			init_pos.t = dialog_wrapper.offsetTop;
 			init_pos.l = dialog_wrapper.offsetLeft;
+			// todo: make function calc_drag_bounds working correctly after first call
+			init_pos.bounds = self.$.calc_drag_bounds(dialog_wrapper);
 			init_pos.bounds = self.$.calc_drag_bounds(dialog_wrapper);
 			document.onmouseup = function () {
 				document.onmousemove = null;
