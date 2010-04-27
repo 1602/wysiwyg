@@ -337,6 +337,30 @@ a.bb-quote, a.bb-hide, a.bb-spoiler, a.bb-code, a.bb-smile, a.bb-media, a.bb-pre
 	background:url(images/bb-top.gif) no-repeat center 1px;
 }
 
+.bb-btn-hide {
+	display: block;
+	float: right;
+	background: url(images/hide.gif) no-repeat 0 0;
+	width: 21px;
+	height: 8px;
+}
+
+.bb-btn-show {
+	display: block;
+	float: right;
+	background: url(images/show.gif) no-repeat 0 0;
+	width: 21px;
+	height: 8px;
+}
+
+.bb-stretch {
+	background: url(images/stretch.gif) no-repeat 0 0;
+	width: 9px;
+	height: 10px;
+	display: block;
+	float: left;
+}
+
 .textplace {
 	float:right;
 	width:546px;

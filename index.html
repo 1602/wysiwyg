@@ -14,15 +14,34 @@
 	<script type="text/javascript" src="form.js"></script>
 	
 	<script>
+	// глобальный объект редактора
 	var wysiwyg;
+	// инициализация при загрузке страницы
 	window.onload = function () {
 		try {
+			/**
+			 * первым параметром принимаем дом-элемент textarea
+			 * второй параметр - объект параметров редактора,
+			 * допустимы следующие поля:
+			 * admin_mode        (default false)
+			 * min_width         (default 674)
+			 * max_width         (default 1024)
+			 * min_height        (default 315)
+			 * max_height        (default 768)
+			 * show_media_panel  (default true)
+			 * css_path          (default 'common.css')
+			 */
 			wysiwyg = new Wysiwyg(document.getElementById('text'), {
-				admin_mode: true
+				// в режиме администратора доступна кнопка просмотра исходного кода
+				admin_mode: true,
+				// путь до общих стилей (применяются и для страницы и для iframe, 
+				// чтобы редактируемый документ выглядел так же как и родительская страница)
+				css_path: '/projects/dmitry/wysiwyg/my/common.css'
 			});
 		} catch(e) {
 			console.log(e);
 		}
+		// украшательства элементов формы
 		Custom.init();
 	}
 	</script>

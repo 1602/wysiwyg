@@ -8,6 +8,7 @@ function Wysiwyg(textarea, options) {
 	options.min_height = options.min_height || 315;
 	options.max_height = options.max_height || 768;
 	options.show_media_panel = options.show_media_panel || true;
+	options.css_path = options.css_path || 'common.css';
 
 	this.options = options;
 
@@ -92,7 +93,7 @@ function Wysiwyg(textarea, options) {
 
 	// stretch (resizer)
 	var editor_stretch = $.create_top('div', 'editor-stretch', editor);
-	editor_stretch.innerHTML = '<a title="растянуть" href="#"><img alt="растянуть" src="/js/editor/images/stretch.gif"/></a>';
+	editor_stretch.innerHTML = '<a title="растянуть" href="#"><div class="bb-stretch"></div></a>';
 	resizer(editor_stretch);
 
 	// top controls (with logo and rounded corners)
@@ -105,7 +106,8 @@ function Wysiwyg(textarea, options) {
 	var hideandshow_div = $.create_top('div', 'hideandshow', editor);
 	var hideandshow_link = $.create_top('a', false, hideandshow_div);
 	hideandshow_link.href = "#";
-	hideandshow_link.innerHTML = '<img title="" alt="show" src="/js/editor/images/hide.gif" style="display: none;" /><img title="" alt="hide" src="/js/editor/images/show.gif" />';
+	hideandshow_link.innerHTML = '<span title="show" style="display: none;" class="bb-btn-hide"></span><span title="hide" class="bb-btn-show"></span>';
+	//<img title="" alt="show" src="images/hide.gif" style="display: none;" /><img title="" alt="hide" src="images/show.gif" />
 	hideandshow_link.onclick = function () {
 		$.each([
 			self.controls.style,
@@ -162,7 +164,8 @@ function Wysiwyg(textarea, options) {
 	textarea.parentNode.removeChild(textarea);
 	this.win = this.iframe.contentWindow;
 	this.doc = this.iframe.contentWindow.document;
-	var html = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><link rel="stylesheet" type="text/css" href="common.css" /></head><body class="wysiwyg-mode">' + this.source.value + '</body></html>';
+	var css_path = options.css_path;
+	var html = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><link rel="stylesheet" type="text/css" href="' + css_path + '" /></head><body class="wysiwyg-mode">' + this.source.value + '</body></html>';
 	this.doc.open();
 	this.doc.write(html);
 	this.doc.close();
