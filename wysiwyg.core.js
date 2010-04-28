@@ -17,7 +17,10 @@ function Wysiwyg(textarea, options) {
 	var self = this,
 		$ = this.$;
 
-	this.workspace = $.create_top('div', 'secure_wysiwyg_editor');
+	this.workspace_wrapper = $.create_top('div', 'secure_wysiwyg_editor');
+	this.workspace_wrapper.style.padding = '10px';
+	this.workspace_wrapper.style.background = '#fff';
+	this.workspace = $.create_top('div', 'secure_wysiwyg_editor', this.workspace_wrapper);
 	this.workspace.style.padding = '20px';
 
 	function resizer(el) {
@@ -146,7 +149,7 @@ function Wysiwyg(textarea, options) {
 	this.iframe.setAttribute('frameBorder', 0);
 	this.is_msie = $.browser.msie;
 
-	textarea.parentNode.insertBefore(this.workspace, textarea.nextSibling);
+	textarea.parentNode.insertBefore(this.workspace_wrapper, textarea.nextSibling);
 
 	var styles = {
 		iframe: {
@@ -367,6 +370,8 @@ Wysiwyg.prototype = {
 					} else {
 						self.$.remove_class(bel, 'click');
 					}
+				} else {
+					self.$.remove_class(bel, 'disabled');
 				}
 			}
 		}
@@ -488,6 +493,14 @@ Wysiwyg.prototype = {
 		overlay.style.position = $.ie6 ? 'absolute' : 'fixed';
 		overlay.style.width = '100%';
 		overlay.style.height = '100%';
+		
+		var overlay_opacity = document.createElement('div');
+		overlay_opacity.id = 'overlay_opacity';
+		overlay_opacity.style.position = $.ie6 ? 'absolute' : 'fixed';
+		overlay_opacity.style.width = '100%';
+		overlay_opacity.style.height = '100%';
+		overlay_opacity.style.backgroundColor = 'gray';
+		overlay_opacity.style.opacity = '0.5';
 
 		if ($.ie6) {
 			var scroll = function () {
@@ -500,13 +513,17 @@ Wysiwyg.prototype = {
 		} else {
 			overlay.style.top = 0;
 			overlay.style.left = 0;
+			overlay_opacity.style.top = 0;
+			overlay_opacity.style.left = 0;
 		}
 
+		document.body.appendChild(overlay_opacity);
 		document.body.appendChild(overlay);
 
 		var dialog_wrapper = document.createElement('div');
 		self.$.add_class(dialog_wrapper, 'modalwindow');
 		dialog_wrapper.style.zIndex = 1002;
+		dialog_wrapper.style.opacity = '2';
 		if (options.width) {
 			dialog_wrapper.style.width = options.width + 'px';
 		}
@@ -582,6 +599,7 @@ Wysiwyg.prototype = {
 
 		function destroy_overlay() {
 			overlay.parentNode.removeChild(overlay);
+			overlay_opacity.parentNode.removeChild(overlay_opacity);
 			if ($.ie6) {
 				window.onscroll = null;
 			}

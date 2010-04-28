@@ -586,11 +586,11 @@ Wysiwyg.prototype.plugins.fullscreen = function (w) {
 
 	function fullscreen() {
 		var bounds = w.$.calc_screen_bounds();
-		w.workspace.style.width = bounds.w - 60 + 'px';
-		w.workspace.style.height = bounds.h - 40 + 'px';
-		w.workspace.style.padding = '10px';
-		var dw = w.workspace.offsetWidth - w.workspace.firstChild.offsetWidth - 2;
-		var dh = w.workspace.offsetHeight - w.workspace.firstChild.offsetHeight - 22;
+		w.workspace_wrapper.style.width = bounds.w - 75 + 'px';
+		w.workspace_wrapper.style.height = bounds.h - 60 + 'px';
+		w.workspace_wrapper.style.padding = '10px';
+		var dw = w.workspace_wrapper.offsetWidth - w.workspace.firstChild.offsetWidth - 2;
+		var dh = w.workspace_wrapper.offsetHeight - w.workspace.firstChild.offsetHeight - 22;
 		w.workspace.firstChild.style.width = w.workspace.firstChild.offsetWidth + dw + 'px';
 		w.workspace.firstChild.style.height = w.workspace.firstChild.offsetHeight + dh + 'px';
 		w.adjust_editor_area_size();
