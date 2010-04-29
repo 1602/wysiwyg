@@ -5,7 +5,7 @@
 	margin:0;
 }
 body {
-	background:#ddd;
+	background:#fff;
 	color:#000;
 	font:13px Trebuchet MS, Arial, Tahoma, Verdana;
 }
@@ -20,7 +20,6 @@ body {
 	top: 0px;
 	text-align:center;
 	z-index: 1000;
-	background-image:url(background-trans.png);
 }
 
 .spoiler .toggler {

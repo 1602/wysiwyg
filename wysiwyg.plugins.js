@@ -252,6 +252,7 @@ Wysiwyg.prototype.plugins.link = function (w) {
 			if (!w.$.has_class(self.el.parentNode, 'disabled')) {
 				self.action();
 			}
+			return false;
 		};
 	};
 	this.panel = 'btns_big';

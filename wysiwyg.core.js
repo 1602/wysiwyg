@@ -78,9 +78,11 @@ function Wysiwyg(textarea, options) {
 				document.onmousemove = null;
 				document.onmouseup = null;
 				document.body.removeChild(overlay);
+				return false;
 			};
 			return false;
 		};
+		el.onclick = function () {return false;}
 
 	}
 
@@ -340,6 +342,7 @@ Wysiwyg.prototype = {
 			if (this.initialized_plugins.hasOwnProperty(i)) {
 				var p = this.initialized_plugins[i], bel = p.el && p.el.parentNode;
 				if (!bel) {
+					console.log(i, p, bel);
 					continue;
 				}
 				if (source_mode) {
@@ -397,6 +400,7 @@ Wysiwyg.prototype = {
 			if (p.html) {
 				button_holder.innerHTML = p.html;
 				button = button_holder.firstChild;
+				p.el = button;
 			} else {
 				button = w.$.create_top('a', false, button_holder);
 				if (p.image) {
@@ -411,9 +415,13 @@ Wysiwyg.prototype = {
 			}
 
 			if (p.init) {
+				button.onclick = function () {
+					return false;
+				}
 				p.init(button_holder);
 			} else {
 				button.onclick = function (e) {
+					try {
 					if (button_holder.className === 'disabled') {
 						return false;
 					}
@@ -426,7 +434,7 @@ Wysiwyg.prototype = {
 						w.update_controls();
 						w.win.focus();
 					}
-
+					}catch(e){}
 					return false;
 				};
 			}
@@ -523,7 +531,7 @@ Wysiwyg.prototype = {
 		var dialog_wrapper = document.createElement('div');
 		self.$.add_class(dialog_wrapper, 'modalwindow');
 		dialog_wrapper.style.zIndex = 1002;
-		dialog_wrapper.style.opacity = '2';
+		//dialog_wrapper.style.opacity = '2';
 		if (options.width) {
 			dialog_wrapper.style.width = options.width + 'px';
 		}
@@ -557,12 +565,25 @@ Wysiwyg.prototype = {
 			init_pos.y = e.clientY;
 			init_pos.t = dialog_wrapper.offsetTop;
 			init_pos.l = dialog_wrapper.offsetLeft;
+			
+			var drag_shadow = document.createElement('div');
+			drag_shadow.className = 'drag_shadow';
+			drag_shadow.style.display = 'block';
+			drag_shadow.style.left = dialog_wrapper.style.left;
+			drag_shadow.style.top = dialog_wrapper.style.top;
+			drag_shadow.style.width = dialog_wrapper.offsetWidth + 'px';
+			drag_shadow.style.height = dialog_wrapper.offsetHeight + 'px';
+			overlay.appendChild(drag_shadow);
+			
 			// todo: make function calc_drag_bounds working correctly after first call
 			init_pos.bounds = self.$.calc_drag_bounds(dialog_wrapper);
 			init_pos.bounds = self.$.calc_drag_bounds(dialog_wrapper);
 			document.onmouseup = function () {
 				document.onmousemove = null;
 				document.onmouseup = null;
+				dialog_wrapper.style.left = drag_shadow.style.left;
+				dialog_wrapper.style.top = drag_shadow.style.top;
+				overlay.removeChild(drag_shadow);
 			};
 			document.onmousemove = function (e) {
 				e = e || window.event;
@@ -572,8 +593,8 @@ Wysiwyg.prototype = {
 				x = Math.min(x, init_pos.bounds.maxX);
 				y = Math.max(y, init_pos.bounds.minY);
 				y = Math.min(y, init_pos.bounds.maxY);
-				dialog_wrapper.style.left = x + 'px';
-				dialog_wrapper.style.top = y + 'px';
+				drag_shadow.style.left = x + 'px';
+				drag_shadow.style.top = y + 'px';
 			};
 			return false;
 		};

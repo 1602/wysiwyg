@@ -11,8 +11,20 @@
 	height:315px;
 	padding:10px 0 15px 0;
 }
+.drag_shadow {
+	position: absolute;
+	background: #888;
+	opacity: 0.5;
+	border: 1px solid #000;
+	z-index: 1003;
+	display: block;
+	cursor: move;
+}
 .editor img {
 	border:none;
+}
+.disabled a{
+	cursor: default !important;
 }
 .etl, .etr, .ebl, .ebr {
 	position:absolute;

@@ -189,7 +189,7 @@ Wysiwyg.prototype.plugins.image_and_file = function (w) {
 	w.register_attribute('border');
 	w.register_attribute('alt');
 	w.register_attribute('href');
-	this.update = '<IMG>';
+	this.update = 'IMG';
 	this.html = '<a class="bb-file" href="#">+ Файл</a>';
 	// todo: make default action instead of this
 	/* this.init = function (element_holder) {
