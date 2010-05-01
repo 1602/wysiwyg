@@ -69,6 +69,7 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 			span.style.fontSize = font_size;
 			w.selection.insert_node(span);
 		} else {
+			var html = w.selection.get_html().replace(/<\/?span.*?>/gi, '');
 			var node = w.selection.get_selection_as_node();
 			var x = node.firstChild;
 			if (x && x.className === 'bb-font-size') {
@@ -77,7 +78,7 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 			} else {
 				span = w.$.create('span', 'bb-font-size');
 				span.style.fontSize = font_size;
-				span.appendChild(node);
+				span.innerHTML = html;
 				w.selection.insert_node(span);
 			}
 			/* w.selection.wrap_with('span', {
