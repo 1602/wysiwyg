@@ -70,7 +70,7 @@ Wysiwyg.prototype.plugins.fontsize = function (w) {
 			w.selection.insert_node(span);
 		} else {
 			var node = w.selection.get_selection_as_node();
-			var x = node.firstChild.nextSibling;
+			var x = node.firstChild;
 			if (x && x.className === 'bb-font-size') {
 				x.style.fontSize = font_size;
 				w.selection.insert_node(x);

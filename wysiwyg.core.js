@@ -509,6 +509,7 @@ Wysiwyg.prototype = {
 		overlay_opacity.style.height = '100%';
 		overlay_opacity.style.backgroundColor = 'gray';
 		overlay_opacity.style.opacity = '0.5';
+		overlay_opacity.style.zIndex = 1000;
 
 		if ($.ie6) {
 			var scroll = function () {
