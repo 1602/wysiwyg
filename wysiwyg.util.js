@@ -287,6 +287,15 @@ Util.prototype = {
 
 		this.scrollbar_width = w1 - w2;
 		return this.scroll_bar_width;
+	},
+	play_sound: function (src) {
+		var x = document.createElement('embed');
+		x.src = src;
+		x.setAttribute('hidden', true);
+		x.setAttribute('autostart', true);
+		x.setAttribute('loop', false);
+		x.setAttribute('volume', 100);
+		document.body.appendChild(x);
 	}
 };
 

@@ -468,6 +468,13 @@ select.styled {
 	padding:6px;
 	cursor: move;
 }
+.modaltitle_attention {
+	color:#7e7e7e;
+	font:bold 12px Tahoma, Helvetica, Arial, Verdana;
+	background:#aaa;
+	border:1px solid #000;
+	padding:6px;
+}
 .modaltitle img {
 	margin-right:10px;
 	vertical-align:middle;

@@ -9,6 +9,7 @@ function Wysiwyg(textarea, options) {
 	options.max_height = options.max_height || 768;
 	options.show_media_panel = options.show_media_panel || true;
 	options.css_path = options.css_path || 'common.css';
+	options.modal_attention_sound_url = options.modal_attention_sound_url || 'http://www.ilovewavs.com/Events/WindowsSounds/WindowsXP/Windows%20XP%20Ding.wav';
 
 	this.options = options;
 
@@ -501,7 +502,7 @@ Wysiwyg.prototype = {
 		overlay.style.position = $.ie6 ? 'absolute' : 'fixed';
 		overlay.style.width = '100%';
 		overlay.style.height = '100%';
-		
+
 		var overlay_opacity = document.createElement('div');
 		overlay_opacity.id = 'overlay_opacity';
 		overlay_opacity.style.position = $.ie6 ? 'absolute' : 'fixed';
@@ -557,6 +558,24 @@ Wysiwyg.prototype = {
 		header.innerHTML = options.caption;
 		$.add_class(header, 'modaltitle');
 		dialog.appendChild(header);
+
+		$.add_event(overlay, 'mousedown', function (e) {
+			var e = e || window.event;
+			var t = e.srcElement || e.target;
+			if (t.id !== 'overlay') {
+				return true;
+			}
+			$.play_sound(self.options.modal_attention_sound_url);
+			var count = 4;
+			var interval = setInterval(function () {
+				header.className = (header.className == 'modaltitle_attention') ? 'modaltitle' : 'modaltitle_attention';
+				count--;
+				if (count <= 0) {
+					header.className = 'modaltitle';
+					clearInterval(interval);
+				}
+			}, 180);
+		});
 
 		// make header draggable
 		var init_pos = {x: 0, y: 0, t: 0, l: 0};
