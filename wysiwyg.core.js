@@ -678,8 +678,7 @@ Wysiwyg.prototype = {
     update_textarea: function () {
         this.source.value = this.doc.body.innerHTML;
     },
-    text_modified_timeout: null
-    ,
+    text_modified_timeout: null,
     text_modified: function () {
         var self = this;
         clearTimeout(this.text_modified_timeout);
@@ -757,11 +756,12 @@ Wysiwyg.prototype = {
         self.doc.body.innerHTML = html;
         // DOM replacements
         // make all spans dirty
-        self.doc.getElementsByTagName('span');
         self.$.each(
             self.doc.getElementsByTagName('span'),
             function (i, span) {
-                self.$.add_class(span, 'dirty');
+                if (span) {
+                    self.$.add_class(span, 'dirty');
+                }
             }
         );
         function get_first_dirty_span() {
@@ -771,6 +771,7 @@ Wysiwyg.prototype = {
                 function (i, span) {
                     if (self.$.has_class(span, 'dirty')) {
                         first_span = span;
+                        self.$.remove_class(span, 'dirty');
                         return false;
                     }
                 }
@@ -778,11 +779,14 @@ Wysiwyg.prototype = {
             return first_span;
         }
 
-        // Cleanable means, exactly one span 
+        // Cleanable means, exactly one span
         // (maybe with whitespace textnodes)
         function cleanable($el) {
             if (!$el) {
                 return false;
+            }
+            if ($el.childNodes.length === 1 && $el.firstChild.nodeType === 3) {
+                return true;
             }
             var node = $el.firstChild, span_count = 0;
             while (node) {
@@ -803,28 +807,31 @@ Wysiwyg.prototype = {
 
         function first_child_span($parent) {
             var first_span = false;
+            var span_count = 0;
             self.$.each($parent.childNodes, function (i, node) {
                 if (node.nodeType === 1 && node.nodeName === 'SPAN') {
                     first_span = node;
-                    return false;
+                    span_count += 1;
                 }
             });
-            return first_span;
+            return span_count === 1 ? first_span : false;
         }
         // clean one-by-one
         var $t = get_first_dirty_span();
         while ($t) {
+            /*
             // just remove class if not cleanable
             if (!cleanable($t)) {
                 self.$.remove_class($t, 'dirty');
                 $t = get_first_dirty_span();
                 continue;
             }
+            */
             var spanstack = [$t.getAttribute('style')], $span = first_child_span($t);
 
             var $prevspan = $t;
             while (cleanable($span)) {
-                var s = $span.getAttribute('style');;
+                var s = $span.getAttribute('style');
                 if (s) {
                     spanstack.push(s);
                 }
@@ -833,7 +840,7 @@ Wysiwyg.prototype = {
             }
             // do clean
             var styles = spanstack.join(';').replace(/\s*;+\s*/g, ';').split(';');
-            var result = $span.innerHTML, s = '', span_mixed_style = [];
+            var result = $prevspan.innerHTML, s = '', span_mixed_style = [];
             var flush_span = function () {
                 if (span_mixed_style.length > 0) {
                     result = '<span style="' + span_mixed_style.join(';') + '">' + result + '</span>';
@@ -848,7 +855,7 @@ Wysiwyg.prototype = {
                 result = '<' + tag + '>' + result + '</' + tag + '>';
             };
             styles.sort();
-            console.log(styles);
+            console.log(spanstack);
             var prev_style = '';
             for (var i = styles.length - 1; i >= 0; i--) {
                 if (!styles[i]) continue;
@@ -886,7 +893,10 @@ Wysiwyg.prototype = {
                 }
             };
             flush_span();
-            $t.outerHTML = result;
+            console.log(result);
+            $t.innerHTML = result;
+            $t.parentNode.insertBefore($t.firstChild.cloneNode(true), $t.nextSibling);
+            $t.parentNode.removeChild($t);
             // next!
             $t = get_first_dirty_span();
         }
