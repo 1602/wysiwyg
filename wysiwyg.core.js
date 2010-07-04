@@ -855,7 +855,6 @@ Wysiwyg.prototype = {
                 result = '<' + tag + '>' + result + '</' + tag + '>';
             };
             styles.sort();
-            console.log(spanstack);
             var prev_style = '';
             for (var i = styles.length - 1; i >= 0; i--) {
                 if (!styles[i]) continue;
@@ -893,7 +892,6 @@ Wysiwyg.prototype = {
                 }
             };
             flush_span();
-            console.log(result);
             $t.innerHTML = result;
             $t.parentNode.insertBefore($t.firstChild.cloneNode(true), $t.nextSibling);
             $t.parentNode.removeChild($t);
