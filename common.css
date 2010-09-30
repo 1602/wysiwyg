@@ -13,7 +13,7 @@ body {
 	clear:both;
 }
 
-#overlay, .overlay {
+.overlay {
 	visibility: hidden;
 	position: absolute;
 	left: 0px;

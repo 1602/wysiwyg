@@ -497,14 +497,14 @@ Wysiwyg.prototype = {
             self.selection.save_selection();
         }
         var overlay = document.createElement('div');
-        overlay.id = 'overlay';
+        overlay.className = 'overlay';
         var bounds = $.calc_screen_bounds();
         overlay.style.position = $.ie6 ? 'absolute' : 'fixed';
         overlay.style.width = '100%';
         overlay.style.height = '100%';
 
         var overlay_opacity = document.createElement('div');
-        overlay_opacity.id = 'overlay_opacity';
+        overlay_opacity.className = 'overlay_opacity';
         overlay_opacity.style.position = $.ie6 ? 'absolute' : 'fixed';
         overlay_opacity.style.width = '100%';
         overlay_opacity.style.height = '100%';
@@ -665,8 +665,19 @@ Wysiwyg.prototype = {
             self.text_modified();
         };
 
+        if (self.options.demo) {
+            var btn_dialog = $.create_top('button');
+            btn_dialog.innerHTML = 'Nested dialog';
+            btn_dialog.onclick = function () {
+                var c = document.createElement('div');
+                c.innerHTML = 'Nested dialog contents';
+                self.show_modal_dialog({width: 300, height: 200, caption: 'Nested dialog'}, c);
+            };
+        }
+
         footer.appendChild(btn_ok);
         footer.appendChild(btn_cancel);
+        if (self.options.demo) footer.appendChild(btn_dialog);
 
         dialog_wrapper.style.left = Math.round((overlay.offsetWidth - dialog_wrapper.offsetWidth) / 2) + 'px';
         dialog_wrapper.style.top = Math.round((overlay.offsetHeight - dialog_wrapper.offsetHeight) / 2) + 'px';
